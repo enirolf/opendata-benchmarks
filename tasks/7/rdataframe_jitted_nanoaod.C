@@ -25,10 +25,11 @@ ROOT::RVec<int> find_isolated_jets(Vec<float> eta1, Vec<float> phi1, Vec<float> 
 }
 
 
-void rdataframe_jitted() {
-    ROOT::EnableImplicitMT();
+void rdataframe_jitted_nanoaod() {
+    // ROOT::EnableImplicitMT();
     ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/root-eos/benchmark/Run2012B_SingleMu.root");
-    auto h = df.Filter("nJet > 0", "At least one jet")
+    auto h = df.Range(0, 100000)
+               .Filter("nJet > 0", "At least one jet")
                .Define("goodJet_ptcut", "Jet_pt > 30")
                .Define("goodJet_antiMuon", find_isolated_jets, {"Jet_eta", "Jet_phi", "Muon_pt", "Muon_eta", "Muon_phi"})
                .Define("goodJet_antiElectron", find_isolated_jets, {"Jet_eta", "Jet_phi", "Electron_pt", "Electron_eta", "Electron_phi"})

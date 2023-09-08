@@ -3,3 +3,5 @@
 *.png
 a.out
 *.root
+*.tar.gz
+data/

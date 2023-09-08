@@ -1,3 +1,7 @@
+ATLAS original name: DAOD_PHYSLITE.33121709._000001.pool.root.1
+mc20_13TeV:mc20_13TeV.364156.Sherpa_221_NNPDF30NNLO_Wmunu_MAXHTPTV0_70_CVetoBVeto.deriv.DAOD_PHYSLITE.e5340_e5984_s3681_r
+13144_r13146_p5631 
+
 # Sofware benchmarks with open data
 
 **NOTE:** This repo contains two versions of the RDataFrame implementation. One version includes just-in-time compilation and the other is fully compiled and therefore optimized for performance. Also, running the files as C++ macro, via the ROOT interpreter cling, will result in a reduced runtime performance due to missing optimizations. To compile any of the benchmarks named `*_compiled.cxx`, source ROOT and run following line:

@@ -41,8 +41,8 @@ unsigned int additional_lepton_idx(Vec<float> pt, Vec<float> eta, Vec<float> phi
 }
 
 
-void rdataframe_jitted() {
-    ROOT::EnableImplicitMT();
+void rdataframe_jitted_nanoaod() {
+    // ROOT::EnableImplicitMT();
     ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/root-eos/benchmark/Run2012B_SingleMu.root");
     auto h = df.Filter("nElectron + nMuon > 2", "At least three leptons")
                .Define("Lepton_pt", "Concatenate(Muon_pt, Electron_pt)")
