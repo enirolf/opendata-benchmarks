@@ -5,3 +5,4 @@ a.out
 *.root
 *.tar.gz
 data/
+results/
