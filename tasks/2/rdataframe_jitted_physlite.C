@@ -1,31 +1,30 @@
-void rdataframe_jitted_ttree() {
+void rdataframe_ttree() {
     ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+    auto h = df.Redefine("AnalysisJetsAuxDyn.pt", "AnalysisJetsAuxDyn.pt / 1000.")
+               .Histo1D({"ttree", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60},
+                         "AnalysisJetsAuxDyn.pt");
 
-    auto h = df.Redefine("AnalysisJetsAuxDyn.pt",
-                         [](ROOT::RVec<float> pts) { return pts / 1000.; },
-                         {"AnalysisJetsAuxDyn.pt"})
-                 .Histo1D({"ttree", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60},
-                          "AnalysisJetsAuxDyn.pt");
-
-    h->Reset();
+    TCanvas c;
+    h->Draw();
+    c.SaveAs("2_rdataframe_jitted_physlite_ttree.png");
 }
 
-void rdataframe_jitted_rntuple() {
+void rdataframe_rntuple() {
     ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
-    auto h = df.Redefine("AnalysisJetsAuxDyn_pt",
-                         [](ROOT::RVec<float> pts) { return pts / 1000.; },
-                         {"AnalysisJetsAuxDyn_pt"})
-                 .Histo1D({"rntuple", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60},
-                          "AnalysisJetsAuxDyn_pt");
-    h->Reset();
+    auto h = df.Redefine("AnalysisJetsAuxDyn_pt", "AnalysisJetsAuxDyn_pt / 1000.")
+               .Histo1D({"rntuple", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60},
+                         "AnalysisJetsAuxDyn_pt");
+    TCanvas c;
+    h->Draw();
+    c.SaveAs("2_rdataframe_jitted_physlite_rntuple.png");
 }
 
-void rdataframe_jitted_physlite(std::string_view storeKind) {
+void rdataframe_jitted_physlite(std::string_view dataFormat) {
     auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
                                                            ROOT::Experimental::ELogLevel::kInfo);
 
-    if (storeKind == "ttree")
-        rdataframe_jitted_ttree();
-    else if (storeKind == "rntuple")
-        rdataframe_jitted_rntuple();
+    if (dataFormat == "ttree")
+        rdataframe_ttree();
+    else if (dataFormat == "rntuple")
+        rdataframe_rntuple();
 }

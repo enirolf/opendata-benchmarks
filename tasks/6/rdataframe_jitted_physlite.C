@@ -39,10 +39,9 @@ float trijet_pt(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> mass, 
 }
 
 
-void rdataframe_jitted_ttree() {
+void rdataframe_ttree() {
     ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
-    auto df2 = df.Define("nJet", [](Vec<float> pts){return pts.size();}, {"AnalysisJetsAuxDyn.pt"})
-                 .Filter("nJet >= 3", "At least three jets")
+    auto df2 = df.Filter("AnalysisJetsAuxDyn.pt.size() >= 3", "At least three jets")
                  .Define("JetXYZT", [](Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> m) {
                               return Construct<XYZTVector>(Construct<PtEtaPhiMVector>(pt, eta, phi, m));},
                          {"AnalysisJetsAuxDyn.pt", "AnalysisJetsAuxDyn.eta", "AnalysisJetsAuxDyn.phi", "AnalysisJetsAuxDyn.m"})
@@ -50,36 +49,35 @@ void rdataframe_jitted_ttree() {
 
     auto h1 = df2.Define("Trijet_pt", trijet_pt, {"AnalysisJetsAuxDyn.pt", "AnalysisJetsAuxDyn.eta", "AnalysisJetsAuxDyn.phi", "AnalysisJetsAuxDyn.m", "Trijet_idx"})
                  .Histo1D({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
-    // auto h2 = df2.Define("Trijet_leadingBtag", "Max(Take(Jet_btag, Trijet_idx))")
-    //              .Histo1D({"", ";Trijet leading b-tag;N_{Events}", 100, 0, 1}, "Trijet_leadingBtag");
 
-    h1->Reset();
+  TCanvas c;
+  h->Draw();
+  c.SaveAs("6_rdataframe_jitted_physlite_ttree.png");
 }
 
-void rdataframe_jitted_rntuple() {
-    ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
-    auto df2 = df.Define("nJet", [](Vec<float> pts){return pts.size();}, {"AnalysisJetsAuxDyn_pt"})
-                 .Filter("nJet >= 3", "At least three jets")
-                 .Define("JetXYZT", [](Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> m) {
-                              return Construct<XYZTVector>(Construct<PtEtaPhiMVector>(pt, eta, phi, m));},
-                         {"AnalysisJetsAuxDyn_pt", "AnalysisJetsAuxDyn_eta", "AnalysisJetsAuxDyn_phi", "AnalysisJetsAuxDyn_m"})
-                 .Define("Trijet_idx", find_trijet, {"JetXYZT"});
+void rdataframe_rntuple() {
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+  auto df2 = df.Filter("AnalysisJetsAuxDyn_pt.size() >= 3", "At least three jets")
+               .Define("JetXYZT", [](Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> m) {
+                            return Construct<XYZTVector>(Construct<PtEtaPhiMVector>(pt, eta, phi, m));},
+                       {"AnalysisJetsAuxDyn_pt", "AnalysisJetsAuxDyn_eta", "AnalysisJetsAuxDyn_phi", "AnalysisJetsAuxDyn_m"})
+               .Define("Trijet_idx", find_trijet, {"JetXYZT"});
 
-    auto h1 = df2.Define("Trijet_pt", trijet_pt, {"AnalysisJetsAuxDyn_pt", "AnalysisJetsAuxDyn_eta", "AnalysisJetsAuxDyn_phi", "AnalysisJetsAuxDyn_m", "Trijet_idx"})
-                 .Histo1D({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
-    // auto h2 = df2.Define("Trijet_leadingBtag", "Max(Take(Jet_btag, Trijet_idx))")
-    //              .Histo1D({"", ";Trijet leading b-tag;N_{Events}", 100, 0, 1}, "Trijet_leadingBtag");
+  auto h1 = df2.Define("Trijet_pt", trijet_pt, {"AnalysisJetsAuxDyn_pt", "AnalysisJetsAuxDyn_eta", "AnalysisJetsAuxDyn_phi", "AnalysisJetsAuxDyn_m", "Trijet_idx"})
+               .Histo1D({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
 
-    h1->Reset();
+  TCanvas c;
+  h->Draw();
+  c.SaveAs("6_rdataframe_jitted_physlite_rntuple.png");
 }
 
-void rdataframe_jitted_physlite(std::string_view storeKind) {
+void rdataframe_jitted_physlite(std::string_view dataFormat) {
     auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
                                                            ROOT::Experimental::ELogLevel::kInfo);
 
-    if (storeKind == "ttree")
-        rdataframe_jitted_ttree();
-    else if (storeKind == "rntuple")
-        rdataframe_jitted_rntuple();
+    if (dataFormat == "ttree")
+        rdataframe_ttree();
+    else if (dataFormat == "rntuple")
+        rdataframe_rntuple();
 }
 

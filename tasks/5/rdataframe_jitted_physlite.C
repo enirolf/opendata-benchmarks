@@ -18,38 +18,40 @@ auto compute_dimuon_masses(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<fl
 };
 
 
-void rdataframe_jitted_ttree() {
+void rdataframe_ttree() {
     ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
-    auto h = df.Define("nMuon", [](Vec<float> pts){return pts.size();}, {"AnalysisMuonsAuxDyn.pt"})
-                 .Filter("nMuon >= 2", "At least two muons")
-                 .Define("Dimuon_mass", compute_dimuon_masses, {"AnalysisMuonsAuxDyn.pt", "AnalysisMuonsAuxDyn.eta", "AnalysisMuonsAuxDyn.phi", "AnalysisMuonsAuxDyn.charge"})
-                 .Filter("Sum(Dimuon_mass > 60 && Dimuon_mass < 120) > 0",
-                         "At least one dimuon system with mass in range [60, 120]")
-                .Define("MET", [](ROOT::RVec<float> sumet) { return sumet[sumet.size() - 1] / 1000.; }, { "MET_Core_AnalysisMETAuxDyn.sumet" })
-                .Histo1D({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET");
+    auto h = df.Filter("AnalysisMuonsAuxDyn.pt.size() >= 2", "At least two muons")
+               .Define("Dimuon_mass", compute_dimuon_masses, {"AnalysisMuonsAuxDyn.pt", "AnalysisMuonsAuxDyn.eta", "AnalysisMuonsAuxDyn.phi", "AnalysisMuonsAuxDyn.charge"})
+               .Filter("Sum(Dimuon_mass > 60 && Dimuon_mass < 120) > 0",
+                       "At least one dimuon system with mass in range [60, 120]")
+               .Define("MET_pt", "MET_Core_AnalysisMETAuxDyn.sumet[MET_Core_AnalysisMETAuxDyn.sumet.size() - 1] / 1000.")
+               .Histo1D({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
 
-    h->Reset();
+    TCanvas c;
+    h->Draw();
+    c.SaveAs("5_rdataframe_jitted_physlite_ttree.png");
 }
 
-void rdataframe_jitted_rntuple() {
+void rdataframe_rntuple() {
     ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
-    auto h = df.Define("nMuon", [](Vec<float> pts){return pts.size();}, {"AnalysisMuonsAuxDyn_pt"})
-                 .Filter("nMuon >= 2", "At least two muons")
-                 .Define("Dimuon_mass", compute_dimuon_masses, {"AnalysisMuonsAuxDyn_pt", "AnalysisMuonsAuxDyn_eta", "AnalysisMuonsAuxDyn_phi", "AnalysisMuonsAuxDyn_charge"})
-                 .Filter("Sum(Dimuon_mass > 60 && Dimuon_mass < 120) > 0",
+    auto h = df.Filter("AnalysisMuonsAuxDyn_pt.size() >= 2", "At least two muons")
+               .Define("Dimuon_mass", compute_dimuon_masses, {"AnalysisMuonsAuxDyn_pt", "AnalysisMuonsAuxDyn_eta", "AnalysisMuonsAuxDyn_phi", "AnalysisMuonsAuxDyn_charge"})
+               .Filter("Sum(Dimuon_mass > 60 && Dimuon_mass < 120) > 0",
                          "At least one dimuon system with mass in range [60, 120]")
-                 .Define("MET", [](ROOT::RVec<float> sumet) { return sumet[sumet.size() - 1] / 1000.; }, { "MET_Core_AnalysisMETAuxDyn_sumet" })
-                 .Histo1D({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET");
+               .Define("MET_pt", "MET_Core_AnalysisMETAuxDyn_sumet[MET_Core_AnalysisMETAuxDyn_sumet.size() - 1] / 1000.")
+               .Histo1D({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
 
-    h->Reset();
+    TCanvas c;
+    h->Draw();
+    c.SaveAs("5_rdataframe_jitted_physlite_rntuple.png");
 }
 
-void rdataframe_jitted_physlite(std::string_view storeKind) {
+void rdataframe_jitted_physlite(std::string_view dataFormat) {
     auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
                                                            ROOT::Experimental::ELogLevel::kInfo);
 
-    if (storeKind == "ttree")
-        rdataframe_jitted_ttree();
-    else if (storeKind == "rntuple")
-        rdataframe_jitted_rntuple();
+    if (dataFormat == "ttree")
+        rdataframe_ttree();
+    else if (dataFormat == "rntuple")
+        rdataframe_rntuple();
 }
