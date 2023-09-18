@@ -40,7 +40,7 @@ float trijet_pt(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> mass, 
 
 
 void rdataframe_jitted_ttree() {
-    ROOT::RDataFrame df("CollectionTree", "root://eosuser.cern.ch//eos/user/f/fdegeus/adl-atlas/DAOD_PHYSLITE.ttree.root");
+    ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
     auto df2 = df.Define("nJet", [](Vec<float> pts){return pts.size();}, {"AnalysisJetsAuxDyn.pt"})
                  .Filter("nJet >= 3", "At least three jets")
                  .Define("JetXYZT", [](Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> m) {
@@ -53,20 +53,11 @@ void rdataframe_jitted_ttree() {
     // auto h2 = df2.Define("Trijet_leadingBtag", "Max(Take(Jet_btag, Trijet_idx))")
     //              .Histo1D({"", ";Trijet leading b-tag;N_{Events}", 100, 0, 1}, "Trijet_leadingBtag");
 
-    auto report = df2.Report();
-    report->Print();
-
-    TCanvas cTTree;
-    // cTTree.Divide(2, 1);
-    // cTTree.cd(1);
-    h1->Draw();
-    // cTTree.cd(2);
-    // h2->Draw();
-    cTTree.SaveAs("6_rdf_physlite_ttree_jitted.png");
+    h1->Reset();
 }
 
 void rdataframe_jitted_rntuple() {
-    ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "root://eosuser.cern.ch//eos/user/f/fdegeus/adl-atlas/DAOD_PHYSLITE.rntuple.root");
+    ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
     auto df2 = df.Define("nJet", [](Vec<float> pts){return pts.size();}, {"AnalysisJetsAuxDyn_pt"})
                  .Filter("nJet >= 3", "At least three jets")
                  .Define("JetXYZT", [](Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> m) {
@@ -79,20 +70,16 @@ void rdataframe_jitted_rntuple() {
     // auto h2 = df2.Define("Trijet_leadingBtag", "Max(Take(Jet_btag, Trijet_idx))")
     //              .Histo1D({"", ";Trijet leading b-tag;N_{Events}", 100, 0, 1}, "Trijet_leadingBtag");
 
-    auto report = df2.Report();
-    report->Print();
-
-    TCanvas cRNTuple;
-    // cRNTuple.Divide(2, 1);
-    // cRNTuple.cd(1);
-    h1->Draw();
-    // cRNTuple.cd(2);
-    // h2->Draw();
-    cRNTuple.SaveAs("6_rdf_physlite_rntuple_jitted.png");
+    h1->Reset();
 }
 
-void rdataframe_jitted_physlite() {
-    // ROOT::EnableImplicitMT();
-    rdataframe_jitted_ttree();
-    rdataframe_jitted_rntuple();
+void rdataframe_jitted_physlite(std::string_view storeKind) {
+    auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
+                                                           ROOT::Experimental::ELogLevel::kInfo);
+
+    if (storeKind == "ttree")
+        rdataframe_jitted_ttree();
+    else if (storeKind == "rntuple")
+        rdataframe_jitted_rntuple();
 }
+

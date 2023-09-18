@@ -25,7 +25,7 @@ ROOT::RVec<int> find_isolated_jets(Vec<float> eta1, Vec<float> phi1, Vec<float> 
 }
 
 void rdataframe_jitted_ttree() {
-    ROOT::RDataFrame df("CollectionTree", "root://eosuser.cern.ch//eos/user/f/fdegeus/adl-atlas/DAOD_PHYSLITE.ttree.root");
+    ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
     auto h = df.Define("nJet", [](Vec<float> pts){return pts.size();}, {"AnalysisJetsAuxDyn.pt"})
                .Filter("nJet > 0", "At least one jet")
                .Define("goodJet_ptcut", "(AnalysisJetsAuxDyn.pt / 1000.) > 30")
@@ -36,31 +36,31 @@ void rdataframe_jitted_ttree() {
                .Define("goodJet_sumPt", "Sum(AnalysisJetsAuxDyn.pt[goodJet]) / 1000.")
                .Histo1D({"", ";Jet p_{T} sum (GeV);N_{Events}", 100, 15, 200}, "goodJet_sumPt");
 
-    TCanvas cTTree;
-    h->Draw();
-    cTTree.SaveAs("7_rdf_physlite_ttree_jitted.png");
+    h->Reset();
 }
 
 void rdataframe_jitted_rntuple(bool mt = false) {
-    ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "root://eosuser.cern.ch//eos/user/f/fdegeus/adl-atlas/DAOD_PHYSLITE.rntuple.root");
-    auto h = df.Filter("nJet > 0", "At least one jet")
-           .Define("goodJet_ptcut", "Jet_pt > 30")
-           .Define("goodJet_antiMuon", find_isolated_jets, {"Jet_eta", "Jet_phi", "Muon_pt", "Muon_eta", "Muon_phi"})
-           .Define("goodJet_antiElectron", find_isolated_jets, {"Jet_eta", "Jet_phi", "Electron_pt", "Electron_eta", "Electron_phi"})
-           .Define("goodJet", "goodJet_ptcut && goodJet_antiMuon && goodJet_antiElectron")
-           .Filter("Sum(goodJet) > 0")
-           .Define("goodJet_sumPt", "Sum(Jet_pt[goodJet])")
-           .Histo1D({"", ";Jet p_{T} sum (GeV);N_{Events}", 100, 15, 200}, "goodJet_sumPt");
+    ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+    auto h = df.Define("nJet", [](Vec<float> pts){return pts.size();}, {"AnalysisJetsAuxDyn_pt"})
+               .Filter("nJet > 0", "At least one jet")
+               .Define("goodJet_ptcut", "(AnalysisJetsAuxDyn_pt / 1000.) > 30")
+               .Define("goodJet_antiMuon", find_isolated_jets, {"AnalysisJetsAuxDyn_eta", "AnalysisJetsAuxDyn_phi", "AnalysisMuonsAuxDyn_pt", "AnalysisMuonsAuxDyn_eta", "AnalysisMuonsAuxDyn_phi"})
+               .Define("goodJet_antiElectron", find_isolated_jets, {"AnalysisJetsAuxDyn_eta", "AnalysisJetsAuxDyn_phi", "AnalysisElectronsAuxDyn_pt", "AnalysisElectronsAuxDyn_eta", "AnalysisElectronsAuxDyn_phi"})
+               .Define("goodJet", "goodJet_ptcut && goodJet_antiMuon && goodJet_antiElectron")
+               .Filter("Sum(goodJet) > 0")
+               .Define("goodJet_sumPt", "Sum(AnalysisJetsAuxDyn_pt[goodJet]) / 1000.")
+               .Histo1D({"", ";Jet p_{T} sum (GeV);N_{Events}", 100, 15, 200}, "goodJet_sumPt");
 
-
-    TCanvas cTTree;
-    h->Draw();
-    cTTree.SaveAs("7_rdf_physlite_rntuple_jitted.png");
+    h->Reset();
 }
 
-void rdataframe_jitted_physlite() {
-    // ROOT::EnableImplicitMT();
-    rdataframe_jitted_ttree();
-    rdataframe_jitted_rntuple();
+void rdataframe_jitted_physlite(std::string_view storeKind) {
+    auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
+                                                           ROOT::Experimental::ELogLevel::kInfo);
+
+    if (storeKind == "ttree")
+        rdataframe_jitted_ttree();
+    else if (storeKind == "rntuple")
+        rdataframe_jitted_rntuple();
 }
 

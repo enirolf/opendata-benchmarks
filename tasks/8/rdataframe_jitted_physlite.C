@@ -41,7 +41,7 @@ unsigned int additional_lepton_idx(Vec<float> pt, Vec<float> eta, Vec<float> phi
 }
 
 void rdataframe_jitted_ttree() {
-    ROOT::RDataFrame df("CollectionTree", "root://eosuser.cern.ch//eos/user/f/fdegeus/adl-atlas/DAOD_PHYSLITE.ttree.root");
+    ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
 
     auto h = df.Filter("AnalysisElectronsAuxDyn.pt.size() + AnalysisMuonsAuxDyn.pt.size() > 2", "At least three leptons")
                .Define("Lepton_pt", "Concatenate(AnalysisMuonsAuxDyn.pt / 1000.f, AnalysisElectronsAuxDyn.pt / 1000.f)")
@@ -60,39 +60,40 @@ void rdataframe_jitted_ttree() {
                        "sqrt(2.0 * Lepton_pt[AdditionalLepton_idx] * MET_pt * (1.0 - cos(ROOT::VecOps::DeltaPhi(MET_phi, Lepton_phi[AdditionalLepton_idx]))))")
                .Histo1D({"", ";Transverse mass (GeV);N_{Events}", 100, 0, 200}, "TransverseMass");
 
-    TCanvas cTTree;
-    h->Draw();
-    cTTree.SaveAs("8_rdf_physlite_ttree_jitted.png");
+    h->Reset();
 }
 
 void rdataframe_jitted_rntuple() {
-    ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "root://eosuser.cern.ch//eos/user/f/fdegeus/adl-atlas/DAOD_PHYSLITE.rntuple.root");
+    ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
 
     auto h = df.Filter("AnalysisElectronsAuxDyn_pt.size() + AnalysisMuonsAuxDyn_pt.size() > 2", "At least three leptons")
                .Define("Lepton_pt", "Concatenate(AnalysisMuonsAuxDyn_pt / 1000.f, AnalysisElectronsAuxDyn_pt / 1000.f)")
-               .Define("Lepton_eta", "Concatenate(AnalysisMuonsAuxDyn.eta, AnalysisElectronsAuxDyn.eta)")
-               .Define("Lepton_phi", "Concatenate(AnalysisMuonsAuxDyn.phi, AnalysisElectronsAuxDyn.phi)")
+               .Define("Lepton_eta", "Concatenate(AnalysisMuonsAuxDyn_eta, AnalysisElectronsAuxDyn_eta)")
+               .Define("Lepton_phi", "Concatenate(AnalysisMuonsAuxDyn_phi, AnalysisElectronsAuxDyn_phi)")
                .Define("Muon_mass", [](Vec<float> pts){return Map(pts, [](float p){ return 0.1056583755f; });}, {"AnalysisMuonsAuxDyn_pt"})
-               .Define("Lepton_mass", "Concatenate(Muon_mass, AnalysisElectronsAuxDyn.m / 1000.f)")
-               .Define("Lepton_charge", "Concatenate(AnalysisMuonsAuxDyn.charge, AnalysisElectronsAuxDyn.charge)")
+               .Define("Lepton_mass", "Concatenate(Muon_mass, AnalysisElectronsAuxDyn_m / 1000.f)")
+               .Define("Lepton_charge", "Concatenate(AnalysisMuonsAuxDyn_charge, AnalysisElectronsAuxDyn_charge)")
                .Define("Lepton_flavour", "Concatenate(ROOT::RVec<int>(AnalysisMuonsAuxDyn_pt.size(), 0), ROOT::RVec<int>(AnalysisElectronsAuxDyn_pt.size(), 1))")
                .Define("AdditionalLepton_idx", additional_lepton_idx,
                        {"Lepton_pt", "Lepton_eta", "Lepton_phi", "Lepton_mass", "Lepton_charge", "Lepton_flavour"})
                .Filter("AdditionalLepton_idx != 99999", "No valid lepton pair found.")
-               .Define("MET_pt", [](Vec<float> sumet) { return sumet[sumet.size() - 1] / 1000.f; }, { "MET_Core_AnalysisMETAuxDyn.sumet" })
-               .Define("MET_phi", [](Vec<float> metX, Vec<float> metY) { return DeltaPhi(metX, metY)[metX.size() - 1]; }, { "MET_Core_AnalysisMETAuxDyn.mpx", "MET_Core_AnalysisMETAuxDyn.mpy" })
+               .Define("MET_pt", [](Vec<float> sumet) { return sumet[sumet.size() - 1] / 1000.f; }, { "MET_Core_AnalysisMETAuxDyn_sumet" })
+               .Define("MET_phi", [](Vec<float> metX, Vec<float> metY) { return DeltaPhi(metX, metY)[metX.size() - 1]; }, { "MET_Core_AnalysisMETAuxDyn_mpx", "MET_Core_AnalysisMETAuxDyn_mpy" })
                .Define("TransverseMass",
                        "sqrt(2.0 * Lepton_pt[AdditionalLepton_idx] * MET_pt * (1.0 - cos(ROOT::VecOps::DeltaPhi(MET_phi, Lepton_phi[AdditionalLepton_idx]))))")
                .Histo1D({"", ";Transverse mass (GeV);N_{Events}", 100, 0, 200}, "TransverseMass");
 
-    TCanvas cRNTuple;
-    h->Draw();
-    cRNTuple.SaveAs("8_rdf_physlite_rntuple_jitted.png");
+    h->Reset();
 }
 
 
-void rdataframe_jitted_physlite() {
-    // ROOT::EnableImplicitMT();
-    rdataframe_jitted_ttree();
-    rdataframe_jitted_rntuple();
+void rdataframe_jitted_physlite(std::string_view storeKind) {
+    auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
+                                                           ROOT::Experimental::ELogLevel::kInfo);
+
+    if (storeKind == "ttree")
+        rdataframe_jitted_ttree();
+    else if (storeKind == "rntuple")
+        rdataframe_jitted_rntuple();
 }
+
