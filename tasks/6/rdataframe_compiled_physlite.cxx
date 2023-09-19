@@ -1,3 +1,12 @@
+#include <iostream>
+#include <string>
+
+#include "Math/Vector4D.h"
+#include "ROOT/RDataFrame.hxx"
+#include "ROOT/RLogger.hxx"
+#include "ROOT/RNTupleDS.hxx"
+#include "TCanvas.h"
+
 template <typename T> using Vec = const ROOT::RVec<T> &;
 using ROOT::Math::PtEtaPhiMVector;
 using ROOT::Math::XYZTVector;
@@ -39,55 +48,65 @@ float trijet_pt(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> mass, 
 void rdataframe_ttree() {
   ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
 
-  auto df2 = df.Filter("AnalysisJetsAuxDyn.pt.size() >= 3", "At least three jets")
+  auto df2 = df.Filter([](Vec<float> pts) { return pts.size() >= 3; }, {"AnalysisJetsAuxDyn.pt"}, "At least three jets")
                .Define("JetXYZT",
                        [](Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> m) {
                          return Construct<XYZTVector>(Construct<PtEtaPhiMVector>(pt, eta, phi, m));
                        },
-                       {"AnalysisJetsAuxDyn.pt", "AnalysisJetsAuxDyn.eta",
-                        "AnalysisJetsAuxDyn.phi", "AnalysisJetsAuxDyn.m"})
+                       {"AnalysisJetsAuxDyn.pt", "AnalysisJetsAuxDyn.eta", "AnalysisJetsAuxDyn.phi", "AnalysisJetsAuxDyn.m"})
                .Define("Trijet_idx", find_trijet, {"JetXYZT"});
 
   auto h1 = df2.Define("Trijet_pt", trijet_pt,
-                       {"AnalysisJetsAuxDyn.pt", "AnalysisJetsAuxDyn.eta",
-                        "AnalysisJetsAuxDyn.phi", "AnalysisJetsAuxDyn.m", "Trijet_idx"})
+                      {"AnalysisJetsAuxDyn.pt", "AnalysisJetsAuxDyn.eta",
+                       "AnalysisJetsAuxDyn.phi", "AnalysisJetsAuxDyn.m", "Trijet_idx"})
                .Histo1D({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
 
   TCanvas c;
-  h->Draw();
-  c.SaveAs("6_rdataframe_jitted_physlite_ttree.png");
+  h1->Draw();
+  c.SaveAs("6_rdataframe_compiled_physlite_ttree.png");
 }
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
       ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
-  auto df2 = df.Filter("AnalysisJetsAuxDyn_pt.size() >= 3", "At least three jets")
+
+  auto df2 = df.Filter([](Vec<float> pts) { return pts.size() >= 3; }, {"AnalysisJetsAuxDyn_pt"}, "At least three jets")
                .Define("JetXYZT",
                        [](Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> m) {
                          return Construct<XYZTVector>(Construct<PtEtaPhiMVector>(pt, eta, phi, m));
-                      },
-                      {"AnalysisJetsAuxDyn_pt", "AnalysisJetsAuxDyn_eta",
-                       "AnalysisJetsAuxDyn_phi", "AnalysisJetsAuxDyn_m"})
+                       },
+                       {"AnalysisJetsAuxDyn_pt", "AnalysisJetsAuxDyn_eta", "AnalysisJetsAuxDyn_phi", "AnalysisJetsAuxDyn_m"})
                .Define("Trijet_idx", find_trijet, {"JetXYZT"});
 
   auto h1 = df2.Define("Trijet_pt", trijet_pt,
-                       {"AnalysisJetsAuxDyn_pt", "AnalysisJetsAuxDyn_eta",
-                        "AnalysisJetsAuxDyn_phi", "AnalysisJetsAuxDyn_m", "Trijet_idx"})
+                      {"AnalysisJetsAuxDyn_pt", "AnalysisJetsAuxDyn_eta",
+                       "AnalysisJetsAuxDyn_phi", "AnalysisJetsAuxDyn_m", "Trijet_idx"})
                .Histo1D({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
 
   TCanvas c;
-  h->Draw();
-  c.SaveAs("6_rdataframe_jitted_physlite_rntuple.png");
+  h1->Draw();
+  c.SaveAs("6_rdataframe_compiled_physlite_rntuple.png");
 }
 
-void rdataframe_jitted_physlite(std::string_view dataFormat) {
+int main(int argc, char const *argv[]) {
+  std::cerr << "WARNING: This implementation is incomplete, do *NOT* use for benchmarking!" << std::endl;
+
+  if (argc < 2) {
+    std::cerr << "Please provide the data format ('ttree' or 'rntuple')" << std::endl;
+    return 1;
+  }
+
   auto verbosity =
       ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
 
-  std::cerr << "WARNING: This implementation is incomplete, do *NOT* use for benchmarking!" << std::endl;
+  std::string dataFormat = std::string(argv[1]);
 
-  if (dataFormat == "ttree")
+  if (dataFormat == "ttree") {
     rdataframe_ttree();
-  else if (dataFormat == "rntuple")
+  } else if (dataFormat == "rntuple") {
     rdataframe_rntuple();
+  } else {
+    std::cerr << "Invalid data format specified (use 'ttree' or 'rntuple')" << std::endl;
+  }
+  return 0;
 }
