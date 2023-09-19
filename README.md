@@ -1,6 +1,8 @@
 # Sofware benchmarks with open data
 
-**NOTE:** This repo contains two versions of the RDataFrame implementation for both NanoAOD and PHYSLITE. One version includes just-in-time compilation and the other is fully compiled and therefore optimized for performance. Also, running the files as C++ macro, via the ROOT interpreter cling, will result in a reduced runtime performance due to missing optimizations. To compile any of the benchmarks named `*_compiled.cxx`, source ROOT and run following line:
+**NOTE (1):** This repo contains two versions of the RDataFrame implementation for both NanoAOD and PHYSLITE. One version includes just-in-time compilation and the other is fully compiled and therefore optimized for performance. Also, running the files as C++ macro, via the ROOT interpreter cling, will result in a reduced runtime performance due to missing optimizations. To compile any of the benchmarks named `*_compiled.cxx`, source ROOT and run following line:
+
+**NOTE (2):** `ROOT::EnableImplicitMT()` has been removed for all benchmarks, once this is properly supported by RNTuple+RDataFrame it will be added back.
 
 ```
 g++ -O3 -o task task.cxx $(root-config --cflags --libs)

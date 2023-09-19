@@ -6,3 +6,5 @@ a.out
 *.tar.gz
 data/
 results/
+
+compiled_*
