@@ -1,3 +1,14 @@
+"""
+get_times.py
+
+usage: get_times.py [-h] results_dir
+
+Extract RDF JIT and wall times from ROOT log files
+
+Author: Florine de Geus <florine.de.geus@cern.ch>
+"""
+
+
 from typing import List, Tuple
 from argparse import ArgumentParser
 
@@ -6,6 +17,7 @@ import re
 import statistics
 
 N_EVENTS = 100016
+
 
 def get_rdf_wall_times(metricsLines: List[str]) -> List[str]:
     wall_times = []
@@ -21,6 +33,22 @@ def get_rdf_wall_times(metricsLines: List[str]) -> List[str]:
 
     return wall_times
 
+
+def get_rdf_jit_times(metricsLines: List[str]) -> List[str]:
+    jit_times = []
+    for ln in metricsLines:
+        m = re.match(
+            r"Info in <\[ROOT\.RDF\] Info (.*) in void "
+            r"ROOT::Detail::RDF::RLoopManager::Jit\(\)>: Just-in-time "
+            r"compilation phase completed in (?P<jit_time>[\.0-9]*) seconds\.",
+            ln,
+        )
+        if m:
+            jit_times.append(float(m.group("jit_time")))
+
+    return jit_times
+
+
 def write_stats(stats: List[Tuple[float, ...]], path: str) -> None:
     with open(path, "w") as f:
         f.writelines("\t".join(line) + "\n" for line in stats)
@@ -28,8 +56,8 @@ def write_stats(stats: List[Tuple[float, ...]], path: str) -> None:
 
 if __name__ == "__main__":
     arg_parser = ArgumentParser(
-        prog="extract_metrics.py",
-        description="Extract relevant metrics from bm_readspeed output files",
+        prog="get_times.py",
+        description="Extract RDF JIT and wall times from ROOT log files",
     )
     arg_parser.add_argument("results_dir")
     args = arg_parser.parse_args()
@@ -44,6 +72,10 @@ if __name__ == "__main__":
             with open(path, "r") as f:
                 lines = f.readlines()
                 wall_times = get_rdf_wall_times(lines)
+                jit_times = get_rdf_jit_times(lines)
 
             with open(path[:-4] + ".data", "w") as f:
-                f.writelines(str(wt) + "\n" for wt in wall_times)
+                f.writelines(
+                    str(wt) + " " + str(jt) + "\n"
+                    for wt, jt in zip(wall_times, jit_times)
+                )
