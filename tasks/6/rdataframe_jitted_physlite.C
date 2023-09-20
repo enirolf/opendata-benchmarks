@@ -54,7 +54,7 @@ void rdataframe_ttree() {
                .Histo1D({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
 
   TCanvas c;
-  h->Draw();
+  h1->Draw();
   c.SaveAs("6_rdataframe_jitted_physlite_ttree.png");
 }
 
@@ -76,7 +76,7 @@ void rdataframe_rntuple() {
                .Histo1D({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
 
   TCanvas c;
-  h->Draw();
+  h1->Draw();
   c.SaveAs("6_rdataframe_jitted_physlite_rntuple.png");
 }
 
