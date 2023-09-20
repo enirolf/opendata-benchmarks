@@ -80,7 +80,7 @@ void rdataframe_rntuple() {
              .Define("Lepton_pt", "Concatenate(AnalysisMuonsAuxDyn_pt / 1000.f, AnalysisElectronsAuxDyn_pt / 1000.f)")
              .Define("Lepton_eta", "Concatenate(AnalysisMuonsAuxDyn_eta, AnalysisElectronsAuxDyn_eta)")
              .Define("Lepton_phi", "Concatenate(AnalysisMuonsAuxDyn_phi, AnalysisElectronsAuxDyn_phi)")
-             .Define("Muon_mass", "Map(AnalysisMuonsAuxDyn_pt, [](float p){ return 0.1056583755f; })")
+             .Define("Muon_mass", "return Map(AnalysisMuonsAuxDyn_pt, [](float p){ return 0.1056583755f; })")
              .Define("Lepton_mass", "Concatenate(Muon_mass, AnalysisElectronsAuxDyn_m / 1000.f)")
              .Define("Lepton_charge", "Concatenate(AnalysisMuonsAuxDyn_charge, AnalysisElectronsAuxDyn_charge)")
              .Define("Lepton_flavour", "Concatenate(ROOT::RVec<int>(AnalysisMuonsAuxDyn_pt.size(), 0), "
