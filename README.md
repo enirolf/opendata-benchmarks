@@ -2,8 +2,6 @@
 
 **NOTE (1):** This repo contains two versions of the RDataFrame implementation for both NanoAOD and PHYSLITE. One version includes just-in-time compilation and the other is fully compiled and therefore optimized for performance. Also, running the files as C++ macro, via the ROOT interpreter cling, will result in a reduced runtime performance due to missing optimizations. To compile any of the benchmarks named `*_compiled.cxx`, source ROOT and run following line:
 
-**NOTE (2):** `ROOT::EnableImplicitMT()` has been removed for all benchmarks, once this is properly supported by RNTuple+RDataFrame it will be added back.
-
 ```
 g++ -O3 -o task task.cxx $(root-config --cflags --libs)
 ```
@@ -13,6 +11,8 @@ To run the macros (named `*_jitted.C`) efficiently with optimizations, please us
 ```
 root -l -b -q macro.C+
 ```
+
+**NOTE (2):** `ROOT::EnableImplicitMT()` has been removed for all benchmarks, once this is properly supported by RNTuple+RDataFrame it will be added back.
 
 The implementations of the nanoAOD benchmarks tracked by the ROOT team can be found [in root-project/rootbench](https://github.com/root-project/rootbench/blob/master/root/tree/dataframe/RDataFrameOpenDataBenchmarks.cxx).
 
@@ -36,8 +36,8 @@ List of tasks:
 
 ## PHYSLITE data sets
 
-| Data type   | Rucio DID                                                                                                        |
-|-------------|:-----------------------------------------------------------------------------------------------------------------|
-| Run 2 MC    | `mc20_13TeV.364156.Sherpa_221_NNPDF30NNLO_Wmunu_MAXHTPTV0_70_CVetoBVeto.deriv.DAOD_PHYSLITE.e5340_e5984_s3681_r` |
-| Run 2 Data  | `data18_13TeV.00357962.physics_Main.deriv.DAOD_PHYSLITE.r13286_p4910_p563`                                       |
+| Data type   | Rucio DID                                                                                                                                     |
+|-------------|:----------------------------------------------------------------------------------------------------------------------------------------------|
+| Run 2 MC    | `mc20_13TeV:mc20_13TeV.364156.Sherpa_221_NNPDF30NNLO_Wmunu_MAXHTPTV0_70_CVetoBVeto.deriv.DAOD_PHYSLITE.e5340_e5984_s3681_r13144_r13146_p5631` |
+| Run 2 Data  | `data18_13TeV:data18_13TeV.00357962.physics_Main.deriv.DAOD_PHYSLITE.r13286_p4910_p5631`                                                      |
 
