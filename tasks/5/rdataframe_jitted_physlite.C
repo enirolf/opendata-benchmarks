@@ -18,7 +18,7 @@ auto compute_dimuon_masses(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<fl
 };
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
   auto h = df.Filter("AnalysisMuonsAuxDyn.pt.size() >= 2", "At least two muons")
              .Define("Dimuon_mass", compute_dimuon_masses,
@@ -36,7 +36,7 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
 
   auto h = df.Filter("AnalysisMuonsAuxDyn_pt.size() >= 2", "At least two muons")
              .Define("Dimuon_mass", compute_dimuon_masses,

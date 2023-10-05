@@ -1,5 +1,5 @@
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
   auto h = df.Filter("Sum(AnalysisJetsAuxDyn.pt > 40) > 1", "More than one jet with pt > 40")
              .Define("MET_pt", "MET_Core_AnalysisMETAuxDyn.sumet[MET_Core_AnalysisMETAuxDyn.sumet.size() - 1] / 1000.")
@@ -12,7 +12,7 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
 
   auto h = df.Filter("Sum(AnalysisJetsAuxDyn_pt > 40) > 1", "More than one jet with pt > 40")
              .Define("MET_pt", "MET_Core_AnalysisMETAuxDyn_sumet[MET_Core_AnalysisMETAuxDyn_sumet.size() - 1] / 1000.")

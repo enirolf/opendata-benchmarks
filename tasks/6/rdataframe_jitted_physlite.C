@@ -37,7 +37,7 @@ float trijet_pt(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> mass, 
 }
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
   auto df2 = df.Filter("AnalysisJetsAuxDyn.pt.size() >= 3", "At least three jets")
                .Define("JetXYZT",
@@ -60,7 +60,7 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
   auto df2 = df.Filter("AnalysisJetsAuxDyn_pt.size() >= 3", "At least three jets")
                .Define("JetXYZT",
                        [](Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> m) {

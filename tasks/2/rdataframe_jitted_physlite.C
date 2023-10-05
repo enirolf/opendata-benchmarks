@@ -1,8 +1,8 @@
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
   auto h = df.Define("Jet_pt", "AnalysisJetsAuxDyn.pt / 1000.")
-             .Histo1D({"ttree", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "Jet_pt");
+             .Histo1D({"", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "Jet_pt");
 
   TCanvas c;
   h->Draw();
@@ -11,10 +11,10 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
 
   auto h = df.Define("Jet_pt", "AnalysisJetsAuxDyn_pt / 1000.")
-             .Histo1D({"rntuple", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "Jet_pt");
+             .Histo1D({"", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "Jet_pt");
 
   TCanvas c;
   h->Draw();

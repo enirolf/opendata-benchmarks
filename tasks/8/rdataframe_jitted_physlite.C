@@ -44,7 +44,7 @@ unsigned int additional_lepton_idx(Vec<float> pt, Vec<float> eta, Vec<float> phi
 }
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
   auto h = df.Filter("AnalysisElectronsAuxDyn.pt.size() + AnalysisMuonsAuxDyn.pt.size() > 2", "At least three leptons")
              .Define("Lepton_pt", "Concatenate(AnalysisMuonsAuxDyn.pt / 1000.f, AnalysisElectronsAuxDyn.pt / 1000.f)")
@@ -74,7 +74,7 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
 
   auto h = df.Filter("AnalysisElectronsAuxDyn_pt.size() + AnalysisMuonsAuxDyn_pt.size() > 2", "At least three leptons")
              .Define("Lepton_pt", "Concatenate(AnalysisMuonsAuxDyn_pt / 1000.f, AnalysisElectronsAuxDyn_pt / 1000.f)")

@@ -25,7 +25,7 @@ ROOT::RVec<int> find_isolated_jets(Vec<float> eta1, Vec<float> phi1, Vec<float> 
 }
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
   auto h = df.Filter("AnalysisJetsAuxDyn.pt.size() > 0", "At least one jet")
              .Define("goodJet_ptcut", "(AnalysisJetsAuxDyn.pt / 1000.) > 30")
@@ -47,7 +47,7 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple(bool mt = false) {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
 
   auto h = df.Filter("AnalysisJetsAuxDyn_pt.size() > 0", "At least one jet")
              .Define("goodJet_ptcut", "(AnalysisJetsAuxDyn_pt / 1000.) > 30")
