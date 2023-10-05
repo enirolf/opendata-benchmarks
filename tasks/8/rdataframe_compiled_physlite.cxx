@@ -53,7 +53,7 @@ unsigned int additional_lepton_idx(Vec<float> pt, Vec<float> eta, Vec<float> phi
 }
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
   auto concatF = [](Vec<float> a, Vec<float> b) { return Concatenate(a, b); };
   auto concatI = [](Vec<int> a, Vec<int> b) { return Concatenate(a, b); };
@@ -88,7 +88,7 @@ void rdataframe_ttree() {
                      {"MET_Core_AnalysisMETAuxDyn.mpx", "MET_Core_AnalysisMETAuxDyn.mpy"})
              .Define("TransverseMass", transverseMass,
                      {"Lepton_pt", "Lepton_phi", "MET_pt", "MET_phi", "AdditionalLepton_idx"})
-             .Histo1D({"", ";Transverse mass (GeV);N_{Events}", 100, 0, 200}, "TransverseMass");
+             .Histo1D<double>({"", ";Transverse mass (GeV);N_{Events}", 100, 0, 200}, "TransverseMass");
 
   TCanvas c;
   h->Draw();
@@ -97,7 +97,7 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
 
   auto concatF = [](Vec<float> a, Vec<float> b) { return Concatenate(a, b); };
   auto concatI = [](Vec<int> a, Vec<int> b) { return Concatenate(a, b); };
@@ -132,7 +132,7 @@ void rdataframe_rntuple() {
                      {"MET_Core_AnalysisMETAuxDyn_mpx", "MET_Core_AnalysisMETAuxDyn_mpy"})
              .Define("TransverseMass", transverseMass,
                      {"Lepton_pt", "Lepton_phi", "MET_pt", "MET_phi", "AdditionalLepton_idx"})
-             .Histo1D({"", ";Transverse mass (GeV);N_{Events}", 100, 0, 200}, "TransverseMass");
+             .Histo1D<double>({"", ";Transverse mass (GeV);N_{Events}", 100, 0, 200}, "TransverseMass");
 
   TCanvas c;
   h->Draw();

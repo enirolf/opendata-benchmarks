@@ -9,12 +9,12 @@
 template <typename T> using Vec = const ROOT::RVec<T>&;
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
-  auto goodJetPt = [](Vec<float> pt, Vec<float> eta) { return pt[abs(eta) < 1.0] / 1000.; };
+  auto goodJetPt = [](Vec<float> pt, Vec<float> eta) { return pt[abs(eta) < 1.0] / 1000.f; };
 
   auto h = df.Define("goodJet_pt", goodJetPt, {"AnalysisJetsAuxDyn.pt", "AnalysisJetsAuxDyn.eta"})
-             .Histo1D({"", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "goodJet_pt");
+             .Histo1D<ROOT::RVec<float>>({"", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "goodJet_pt");
 
   TCanvas c;
   h->Draw();
@@ -23,12 +23,12 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
 
-  auto goodJetPt = [](Vec<float> pt, Vec<float> eta) { return pt[abs(eta) < 1.0] / 1000.; };
+  auto goodJetPt = [](Vec<float> pt, Vec<float> eta) { return pt[abs(eta) < 1.0] / 1000.f; };
 
   auto h = df.Define("goodJet_pt", goodJetPt, {"AnalysisJetsAuxDyn_pt", "AnalysisJetsAuxDyn_eta"})
-               .Histo1D({"", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "goodJet_pt");
+             .Histo1D<ROOT::RVec<float>>({"", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "goodJet_pt");
   TCanvas c;
   h->Draw();
   c.SaveAs("3_rdataframe_compiled_physlite_rntuple.png");

@@ -9,10 +9,10 @@
 template <typename T> using Vec = const ROOT::RVec<T>&;
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
-  auto h = df.Redefine("AnalysisJetsAuxDyn.pt", [](Vec<float> pts) { return pts / 1000.; }, {"AnalysisJetsAuxDyn.pt"})
-             .Histo1D({"ttree", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "AnalysisJetsAuxDyn.pt");
+  auto h = df.Redefine("AnalysisJetsAuxDyn.pt", [](Vec<float> pts) { return pts / 1000.f; }, {"AnalysisJetsAuxDyn.pt"})
+             .Histo1D<ROOT::RVec<float>>({"ttree", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "AnalysisJetsAuxDyn.pt");
 
   TCanvas c;
   h->Draw();
@@ -21,10 +21,10 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
 
-  auto h = df.Redefine("AnalysisJetsAuxDyn_pt", [](Vec<float> pts) { return pts / 1000.; }, {"AnalysisJetsAuxDyn_pt"})
-             .Histo1D({"rntuple", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "AnalysisJetsAuxDyn_pt");
+  auto h = df.Redefine("AnalysisJetsAuxDyn_pt", [](Vec<float> pts) { return pts / 1000.f; }, {"AnalysisJetsAuxDyn_pt"})
+             .Histo1D<ROOT::RVec<float>>({"rntuple", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "AnalysisJetsAuxDyn_pt");
 
   TCanvas c;
   h->Draw();

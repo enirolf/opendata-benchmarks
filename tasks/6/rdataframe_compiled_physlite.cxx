@@ -46,7 +46,7 @@ float trijet_pt(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> mass, 
 }
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
   auto df2 = df.Filter([](Vec<float> pts) { return pts.size() >= 3; }, {"AnalysisJetsAuxDyn.pt"}, "At least three jets")
                .Define("JetXYZT",
@@ -59,7 +59,7 @@ void rdataframe_ttree() {
   auto h1 = df2.Define("Trijet_pt", trijet_pt,
                       {"AnalysisJetsAuxDyn.pt", "AnalysisJetsAuxDyn.eta",
                        "AnalysisJetsAuxDyn.phi", "AnalysisJetsAuxDyn.m", "Trijet_idx"})
-               .Histo1D({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
+               .Histo1D<float>({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
 
   TCanvas c;
   h1->Draw();
@@ -68,7 +68,7 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
 
   auto df2 = df.Filter([](Vec<float> pts) { return pts.size() >= 3; }, {"AnalysisJetsAuxDyn_pt"}, "At least three jets")
                .Define("JetXYZT",
@@ -81,7 +81,7 @@ void rdataframe_rntuple() {
   auto h1 = df2.Define("Trijet_pt", trijet_pt,
                       {"AnalysisJetsAuxDyn_pt", "AnalysisJetsAuxDyn_eta",
                        "AnalysisJetsAuxDyn_phi", "AnalysisJetsAuxDyn_m", "Trijet_idx"})
-               .Histo1D({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
+               .Histo1D<float>({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
 
   TCanvas c;
   h1->Draw();

@@ -9,11 +9,11 @@
 template <typename T> using Vec = const ROOT::RVec<T>&;
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
-  auto h = df.Define("MET_pt", [](Vec<float> sumet) { return sumet[sumet.size() - 1] / 1000.; },
+  auto h = df.Define("MET_pt", [](Vec<float> sumet) { return sumet[sumet.size() - 1] / 1000.f; },
                      {"MET_Core_AnalysisMETAuxDyn.sumet"})
-             .Histo1D({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
+             .Histo1D<float>({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
 
   TCanvas c;
   h->Draw();
@@ -22,11 +22,11 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
 
-  auto h = df.Define("MET_pt", [](Vec<float> sumet) { return sumet[sumet.size() - 1] / 1000.; },
+  auto h = df.Define("MET_pt", [](Vec<float> sumet) { return sumet[sumet.size() - 1] / 1000.f; },
                      {"MET_Core_AnalysisMETAuxDyn_sumet"})
-             .Histo1D({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
+             .Histo1D<float>({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
 
   TCanvas c;
   h->Draw();

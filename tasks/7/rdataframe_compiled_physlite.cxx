@@ -34,7 +34,7 @@ ROOT::RVec<int> find_isolated_jets(Vec<float> eta1, Vec<float> phi1, Vec<float> 
 }
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
   auto h = df.Filter([](Vec<float> pts){ return pts.size() > 0;}, {"AnalysisJetsAuxDyn.pt"}, "At least one jet")
              .Define("goodJet_ptcut", [](Vec<float> pt) { return (pt / 1000.) > 30; }, {"AnalysisJetsAuxDyn.pt"})
              .Define("goodJet_antiMuon", find_isolated_jets, {"AnalysisJetsAuxDyn.eta", "AnalysisJetsAuxDyn.phi", "AnalysisMuonsAuxDyn.pt", "AnalysisMuonsAuxDyn.eta", "AnalysisMuonsAuxDyn.phi"})
@@ -44,9 +44,9 @@ void rdataframe_ttree() {
                     {"goodJet_ptcut", "goodJet_antiMuon", "goodJet_antiElectron"})
              .Filter([](Vec<int> good) { return Sum(good) > 0; }, {"goodJet"})
              .Define("goodJet_sumPt",
-                       [](const Vec<int> good, const Vec<float> pt) { return Sum(pt[good] / 1000.); },
+                       [](const Vec<int> good, const Vec<float> pt) { return Sum(pt[good] / 1000.f); },
                        {"goodJet", "AnalysisJetsAuxDyn.pt"})
-             .Histo1D({"", ";Jet p_{T} sum (GeV);N_{Events}", 100, 15, 200}, "goodJet_sumPt");
+             .Histo1D<float>({"", ";Jet p_{T} sum (GeV);N_{Events}", 100, 15, 200}, "goodJet_sumPt");
 
   TCanvas c;
   h->Draw();
@@ -54,7 +54,7 @@ void rdataframe_ttree() {
 }
 
 void rdataframe_rntuple() {
-  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
   auto h = df.Filter([](Vec<float> pts){ return pts.size() > 0;}, {"AnalysisJetsAuxDyn_pt"}, "At least one jet")
              .Define("goodJet_ptcut", [](Vec<float> pt) { return (pt / 1000.) > 30; }, {"AnalysisJetsAuxDyn_pt"})
              .Define("goodJet_antiMuon", find_isolated_jets, {"AnalysisJetsAuxDyn_eta", "AnalysisJetsAuxDyn_phi", "AnalysisMuonsAuxDyn_pt", "AnalysisMuonsAuxDyn_eta", "AnalysisMuonsAuxDyn_phi"})
@@ -64,9 +64,9 @@ void rdataframe_rntuple() {
                     {"goodJet_ptcut", "goodJet_antiMuon", "goodJet_antiElectron"})
              .Filter([](Vec<int> good) { return Sum(good) > 0; }, {"goodJet"})
              .Define("goodJet_sumPt",
-                       [](const Vec<int> good, const Vec<float> pt) { return Sum(pt[good] / 1000.); },
+                       [](const Vec<int> good, const Vec<float> pt) { return Sum(pt[good] / 1000.f); },
                        {"goodJet", "AnalysisJetsAuxDyn_pt"})
-             .Histo1D({"", ";Jet p_{T} sum (GeV);N_{Events}", 100, 15, 200}, "goodJet_sumPt");
+             .Histo1D<float>({"", ";Jet p_{T} sum (GeV);N_{Events}", 100, 15, 200}, "goodJet_sumPt");
 
   TCanvas c;
   h->Draw();

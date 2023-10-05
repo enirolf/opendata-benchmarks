@@ -27,7 +27,7 @@ auto compute_dimuon_masses(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<fl
 };
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/data_run2/DAOD_PHYSLITE.ttree.root");
+  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
 
   auto h = df.Filter([](Vec<float> pt) { return pt.size() >= 2; }, {"AnalysisMuonsAuxDyn.pt"}, "At least two muons")
              .Define("Dimuon_mass", compute_dimuon_masses,
@@ -35,9 +35,9 @@ void rdataframe_ttree() {
                       "AnalysisMuonsAuxDyn.phi", "AnalysisMuonsAuxDyn.charge"})
              .Filter([](Vec<float> mass) { return Sum(mass > 60 && mass < 120) > 0; }, {"Dimuon_mass"},
                      "At least one dimuon system with mass in range [60, 120]")
-             .Define("MET_pt", [](Vec<float> sumet) { return sumet[sumet.size() - 1] / 1000.; },
+             .Define("MET_pt", [](Vec<float> sumet) { return sumet[sumet.size() - 1] / 1000.f; },
                      {"MET_Core_AnalysisMETAuxDyn.sumet"})
-             .Histo1D({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
+             .Histo1D<float>({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
 
   TCanvas c;
   h->Draw();
@@ -46,7 +46,7 @@ void rdataframe_ttree() {
 
 void rdataframe_rntuple() {
   ROOT::RDataFrame df =
-      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/data_run2/DAOD_PHYSLITE.rntuple.root");
+      ROOT::RDF::Experimental::FromRNTuple("CollectionTree", "data/DAOD_PHYSLITE.rntuple.root");
 
   auto h = df.Filter([](Vec<float> pt) { return pt.size() >= 2; }, {"AnalysisMuonsAuxDyn_pt"}, "At least two muons")
              .Define("Dimuon_mass", compute_dimuon_masses,
@@ -54,9 +54,9 @@ void rdataframe_rntuple() {
                       "AnalysisMuonsAuxDyn_phi", "AnalysisMuonsAuxDyn_charge"})
              .Filter([](Vec<float> mass) { return Sum(mass > 60 && mass < 120) > 0; }, {"Dimuon_mass"},
                      "At least one dimuon system with mass in range [60, 120]")
-             .Define("MET_pt", [](Vec<float> sumet) { return sumet[sumet.size() - 1] / 1000.; },
+             .Define("MET_pt", [](Vec<float> sumet) { return sumet[sumet.size() - 1] / 1000.f; },
                      {"MET_Core_AnalysisMETAuxDyn_sumet"})
-             .Histo1D({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
+             .Histo1D<float>({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
 
   TCanvas c;
   h->Draw();
