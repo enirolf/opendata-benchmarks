@@ -1,6 +1,10 @@
 #include "Math/Vector4D.h"
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/RLogger.hxx"
+#include "ROOT/RNTupleDS.hxx"
+
 #include "TCanvas.h"
+#include "TString.h"
 
 template <typename T> using Vec = const ROOT::RVec<T> &;
 using FourVector = ROOT::Math::PtEtaPhiMVector;
@@ -20,8 +24,8 @@ auto compute_dimuon_masses(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<fl
   return masses;
 };
 
-void rdataframe() {
-  ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/root-eos/benchmark/Run2012B_SingleMu.root");
+void rdataframe_ttree() {
+  ROOT::RDataFrame df("Events", "data/nanoaod.ttree.root");
 
   auto h = df.Filter([](unsigned int n) { return n >= 2; }, {"nMuon"}, "At least two muons")
              .Define("Dimuon_mass", compute_dimuon_masses,
@@ -32,10 +36,41 @@ void rdataframe() {
 
   TCanvas c;
   h->Draw();
-  c.SaveAs("5_rdataframe_compiled_nanoaod.png");
+  c.SaveAs("5_rdataframe_compiled_nanoaod_ttree.png");
 }
 
-int main() {
-  rdataframe();
+void rdataframe_rntuple() {
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod.rntuple.root");
+
+  auto h = df.Filter([](unsigned int n) { return n >= 2; }, {"nMuon"}, "At least two muons")
+             .Define("Dimuon_mass", compute_dimuon_masses,
+                     {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass", "Muon_charge"})
+             .Filter([](Vec<float> mass) { return Sum(mass > 60 && mass < 120) > 0; }, {"Dimuon_mass"},
+                     "At least one dimuon system with mass in range [60, 120]")
+             .Histo1D<float>({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
+
+  TCanvas c;
+  h->Draw();
+  c.SaveAs("5_rdataframe_compiled_nanoaod_rntuple.png");
+}
+
+int main(int argc, char const *argv[]) {
+  if (argc < 2) {
+    std::cerr << "Please provide the data format ('ttree' or 'rntuple')" << std::endl;
+    return 1;
+  }
+
+  auto verbosity =
+      ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
+
+  std::string dataFormat = std::string(argv[1]);
+
+  if (dataFormat == "ttree") {
+    rdataframe_ttree();
+  } else if (dataFormat == "rntuple") {
+    rdataframe_rntuple();
+  } else {
+    std::cerr << "Invalid data format specified (use 'ttree' or 'rntuple')" << std::endl;
+  }
   return 0;
 }

@@ -34,11 +34,11 @@ float trijet_pt(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> mass, 
   return (p1 + p2 + p3).pt();
 }
 
-void rdataframe_jitted_nanoaod() {
+void rdataframe_ttree() {
   using ROOT::Math::PtEtaPhiMVector;
   using ROOT::VecOps::Construct;
 
-  ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/root-eos/benchmark/Run2012B_SingleMu.root");
+  ROOT::RDataFrame df("Events", "data/nanoaod.ttree.root");
 
   auto df2 = df.Filter("nJet >= 3", "At least three jets")
                .Define("JetXYZT",
@@ -59,5 +59,44 @@ void rdataframe_jitted_nanoaod() {
   h1->Draw();
   c.cd(2);
   h2->Draw();
-  c.SaveAs("6_rdataframe_jitted_nanoaod.png");
+  c.SaveAs("6_rdataframe_jitted_nanoaod_ttree.png");
+}
+
+void rdataframe_rntuple() {
+  using ROOT::Math::PtEtaPhiMVector;
+  using ROOT::VecOps::Construct;
+
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod.rntuple.root");
+
+  auto df2 = df.Filter("nJet >= 3", "At least three jets")
+               .Define("JetXYZT",
+                       [](Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> m) {
+                         return Construct<XYZTVector>(Construct<PtEtaPhiMVector>(pt, eta, phi, m));
+                       },
+                      {"Jet_pt", "Jet_eta", "Jet_phi", "Jet_mass"})
+               .Define("Trijet_idx", find_trijet, {"JetXYZT"});
+
+  auto h1 = df2.Define("Trijet_pt", trijet_pt, {"Jet_pt", "Jet_eta", "Jet_phi", "Jet_mass", "Trijet_idx"})
+               .Histo1D({"", ";Trijet pt (GeV);N_{Events}", 100, 15, 40}, "Trijet_pt");
+  auto h2 = df2.Define("Trijet_leadingBtag", "Max(Take(Jet_btag, Trijet_idx))")
+               .Histo1D({"", ";Trijet leading b-tag;N_{Events}", 100, 0, 1}, "Trijet_leadingBtag");
+
+  TCanvas c;
+  c.Divide(2, 1);
+  c.cd(1);
+  h1->Draw();
+  c.cd(2);
+  h2->Draw();
+  c.SaveAs("6_rdataframe_jitted_nanoaod_rntuple.png");
+}
+
+
+void rdataframe_jitted_nanoaod(std::string_view dataFormat) {
+  auto verbosity =
+      ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
+
+  if (dataFormat == "ttree")
+    rdataframe_ttree();
+  else if (dataFormat == "rntuple")
+    rdataframe_rntuple();
 }

@@ -1,6 +1,10 @@
 #include "Math/Vector4D.h"
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/RLogger.hxx"
+#include "ROOT/RNTupleDS.hxx"
+
 #include "TCanvas.h"
+#include "TString.h"
 
 template <typename T> using Vec = const ROOT::RVec<T> &;
 using FourVector = ROOT::Math::PtEtaPhiMVector;
@@ -47,8 +51,8 @@ unsigned int additional_lepton_idx(Vec<float> pt, Vec<float> eta, Vec<float> phi
   return lep_idx;
 }
 
-void rdataframe() {
-  ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/root-eos/benchmark/Run2012B_SingleMu.root");
+void rdataframe_ttree() {
+  ROOT::RDataFrame df("Events", "data/nanoaod.ttree.root");
 
   auto concatF = [](Vec<float> a, Vec<float> b) { return Concatenate(a, b); };
   auto concatI = [](Vec<int> a, Vec<int> b) { return Concatenate(a, b); };
@@ -80,10 +84,62 @@ void rdataframe() {
 
   TCanvas c;
   h->Draw();
-  c.SaveAs("8_rdataframe_compiled_nanoaod.png");
+  c.SaveAs("8_rdataframe_compiled_nanoaod_ttree.png");
 }
 
-int main() {
-  rdataframe();
+void rdataframe_rntuple() {
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod.rntuple.root");
+
+  auto concatF = [](Vec<float> a, Vec<float> b) { return Concatenate(a, b); };
+  auto concatI = [](Vec<int> a, Vec<int> b) { return Concatenate(a, b); };
+
+  auto transverseMass = [](Vec<float> Lepton_pt, Vec<float> Lepton_phi, float MET_pt,
+                           float MET_phi, unsigned int idx) {
+    return sqrt(2.0 * Lepton_pt[idx] * MET_pt * (1.0 - cos(ROOT::VecOps::DeltaPhi(MET_phi, Lepton_phi[idx]))));
+  };
+
+  auto h = df.Filter([](unsigned int nElectron, unsigned int nMuon) { return nElectron + nMuon > 2; },
+                     {"nElectron", "nMuon"}, "At least three leptons")
+             .Define("Lepton_pt", concatF, {"Muon_pt", "Electron_pt"})
+             .Define("Lepton_eta", concatF, {"Muon_eta", "Electron_eta"})
+             .Define("Lepton_phi", concatF, {"Muon_phi", "Electron_phi"})
+             .Define("Lepton_mass", concatF, {"Muon_mass", "Electron_mass"})
+             .Define("Lepton_charge", concatI, {"Muon_charge", "Electron_charge"})
+             .Define("Lepton_flavour",
+                     [](unsigned int nMuon, unsigned int nElectron) {
+                       return Concatenate(ROOT::RVec<int>(nMuon, 0), ROOT::RVec<int>(nElectron, 1));
+                     },
+                     {"nMuon", "nElectron"})
+             .Define("AdditionalLepton_idx", additional_lepton_idx,
+                     {"Lepton_pt", "Lepton_eta", "Lepton_phi", "Lepton_mass", "Lepton_charge", "Lepton_flavour"})
+             .Filter([](unsigned int idx) { return idx != PLACEHOLDER_VALUE; }, {"AdditionalLepton_idx"},
+                     "No valid lepton pair found.")
+             .Define("TransverseMass", transverseMass,
+                     {"Lepton_pt", "Lepton_phi", "MET_pt", "MET_phi", "AdditionalLepton_idx"})
+             .Histo1D<double>({"", ";Transverse mass (GeV);N_{Events}", 100, 0, 200}, "TransverseMass");
+
+  TCanvas c;
+  h->Draw();
+  c.SaveAs("8_rdataframe_compiled_nanoaod_rntuple.png");
+}
+
+int main(int argc, char const *argv[]) {
+  if (argc < 2) {
+    std::cerr << "Please provide the data format ('ttree' or 'rntuple')" << std::endl;
+    return 1;
+  }
+
+  auto verbosity =
+      ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
+
+  std::string dataFormat = std::string(argv[1]);
+
+  if (dataFormat == "ttree") {
+    rdataframe_ttree();
+  } else if (dataFormat == "rntuple") {
+    rdataframe_rntuple();
+  } else {
+    std::cerr << "Invalid data format specified (use 'ttree' or 'rntuple')" << std::endl;
+  }
   return 0;
 }

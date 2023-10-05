@@ -16,8 +16,8 @@ auto compute_dimuon_masses(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<fl
   return masses;
 };
 
-void rdataframe_jitted_nanoaod() {
-  ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/root-eos/benchmark/Run2012B_SingleMu.root");
+void rdataframe_ttree() {
+  ROOT::RDataFrame df("Events", "data/nanoaod.ttree.root");
 
   auto h = df.Filter("nMuon >= 2", "At least two muons")
              .Define("Dimuon_mass", compute_dimuon_masses,
@@ -28,5 +28,31 @@ void rdataframe_jitted_nanoaod() {
 
   TCanvas c;
   h->Draw();
-  c.SaveAs("5_rdataframe_jitted_nanoaod.png");
+  c.SaveAs("5_rdataframe_jitted_nanoaod_ttree.png");
+}
+
+void rdataframe_rntuple() {
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod.rntuple.root");
+
+  auto h = df.Filter("nMuon >= 2", "At least two muons")
+             .Define("Dimuon_mass", compute_dimuon_masses,
+                     {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass", "Muon_charge"})
+             .Filter("Sum(Dimuon_mass > 60 && Dimuon_mass < 120) > 0",
+                     "At least one dimuon system with mass in range [60, 120]")
+             .Histo1D({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
+
+  TCanvas c;
+  h->Draw();
+  c.SaveAs("5_rdataframe_jitted_nanoaod_rntuple.png");
+}
+
+
+void rdataframe_jitted_nanoaod(std::string_view dataFormat) {
+  auto verbosity =
+      ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
+
+  if (dataFormat == "ttree")
+    rdataframe_ttree();
+  else if (dataFormat == "rntuple")
+    rdataframe_rntuple();
 }

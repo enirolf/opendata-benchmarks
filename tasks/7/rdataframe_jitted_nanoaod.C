@@ -24,8 +24,8 @@ ROOT::RVec<int> find_isolated_jets(Vec<float> eta1, Vec<float> phi1, Vec<float> 
   return mask;
 }
 
-void rdataframe_jitted_nanoaod() {
-  ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/root-eos/benchmark/Run2012B_SingleMu.root");
+void rdataframe_ttree() {
+  ROOT::RDataFrame df("Events", "data/nanoaod.ttree.root");
 
   auto h = df.Filter("nJet > 0", "At least one jet")
              .Define("goodJet_ptcut", "Jet_pt > 30")
@@ -39,5 +39,34 @@ void rdataframe_jitted_nanoaod() {
 
   TCanvas c;
   h->Draw();
-  c.SaveAs("7_rdataframe_jitted_nanoaod.png");
+  c.SaveAs("7_rdataframe_jitted_ttree.png");
 }
+
+void rdataframe_rntuple() {
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod.rntuple.root");
+
+  auto h = df.Filter("nJet > 0", "At least one jet")
+             .Define("goodJet_ptcut", "Jet_pt > 30")
+             .Define("goodJet_antiMuon", find_isolated_jets, {"Jet_eta", "Jet_phi", "Muon_pt", "Muon_eta", "Muon_phi"})
+             .Define("goodJet_antiElectron", find_isolated_jets,
+                     {"Jet_eta", "Jet_phi", "Electron_pt", "Electron_eta", "Electron_phi"})
+             .Define("goodJet", "goodJet_ptcut && goodJet_antiMuon && goodJet_antiElectron")
+             .Filter("Sum(goodJet) > 0")
+             .Define("goodJet_sumPt", "Sum(Jet_pt[goodJet])")
+             .Histo1D({"", ";Jet p_{T} sum (GeV);N_{Events}", 100, 15, 200}, "goodJet_sumPt");
+
+  TCanvas c;
+  h->Draw();
+  c.SaveAs("7_rdataframe_jitted_rntuple.png");
+}
+
+void rdataframe_jitted_nanoaod(std::string_view dataFormat) {
+  auto verbosity =
+      ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
+
+  if (dataFormat == "ttree")
+    rdataframe_ttree();
+  else if (dataFormat == "rntuple")
+    rdataframe_rntuple();
+}
+

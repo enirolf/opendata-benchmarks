@@ -43,8 +43,8 @@ unsigned int additional_lepton_idx(Vec<float> pt, Vec<float> eta, Vec<float> phi
   return lep_idx;
 }
 
-void rdataframe_jitted_nanoaod() {
-  ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/root-eos/benchmark/Run2012B_SingleMu.root");
+void rdataframe_ttree() {
+  ROOT::RDataFrame df("Events", "data/nanoaod.ttree.root");
 
   auto h = df.Filter("nElectron + nMuon > 2", "At least three leptons")
              .Define("Lepton_pt", "Concatenate(Muon_pt, Electron_pt)")
@@ -63,5 +63,38 @@ void rdataframe_jitted_nanoaod() {
 
   TCanvas c;
   h->Draw();
-  c.SaveAs("8_rdataframe_jitted_nanoaod.png");
+  c.SaveAs("8_rdataframe_jitted_nanoaod_ttree.png");
+}
+
+void rdataframe_rntuple() {
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod.rntuple.root");
+
+  auto h = df.Filter("nElectron + nMuon > 2", "At least three leptons")
+             .Define("Lepton_pt", "Concatenate(Muon_pt, Electron_pt)")
+             .Define("Lepton_eta", "Concatenate(Muon_eta, Electron_eta)")
+             .Define("Lepton_phi", "Concatenate(Muon_phi, Electron_phi)")
+             .Define("Lepton_mass", "Concatenate(Muon_mass, Electron_mass)")
+             .Define("Lepton_charge", "Concatenate(Muon_charge, Electron_charge)")
+             .Define("Lepton_flavour", "Concatenate(ROOT::RVec<int>(nMuon, 0), ROOT::RVec<int>(nElectron, 1))")
+             .Define("AdditionalLepton_idx", additional_lepton_idx,
+                     {"Lepton_pt", "Lepton_eta", "Lepton_phi", "Lepton_mass", "Lepton_charge", "Lepton_flavour"})
+             .Filter("AdditionalLepton_idx != 99999", "No valid lepton pair found.")
+             .Define("TransverseMass",
+                     "sqrt(2.0 * Lepton_pt[AdditionalLepton_idx] * MET_pt "
+                          "* (1.0 - cos(ROOT::VecOps::DeltaPhi(MET_phi, Lepton_phi[AdditionalLepton_idx]))))")
+             .Histo1D({"", ";Transverse mass (GeV);N_{Events}", 100, 0, 200}, "TransverseMass");
+
+  TCanvas c;
+  h->Draw();
+  c.SaveAs("8_rdataframe_jitted_nanoaod_rntuple.png");
+}
+
+void rdataframe_jitted_nanoaod(std::string_view dataFormat) {
+  auto verbosity =
+      ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
+
+  if (dataFormat == "ttree")
+    rdataframe_ttree();
+  else if (dataFormat == "rntuple")
+    rdataframe_rntuple();
 }
