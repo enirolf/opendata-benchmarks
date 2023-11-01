@@ -45,13 +45,13 @@ function run_compiled() {
       echo "   Running with ${format}..."
       for i in $( seq 1 $N_REPETITIONS ); do
         clear_page_cache
-        results=$(./tasks/${task}/compiled_nanoaod ${format} 2>&1)
+        results=$(./tasks/${task}/compiled_${EDM} ${format} 2>&1)
         echo "$results" >> $RESULTS_DIR/${task}_${format}_compiled.txt
       done
     done
   done
 
-  python get_times.py $RESULTS_DIR
+  python benchmarks/get_times.py $RESULTS_DIR
 
   echo "All done!"
   return 0

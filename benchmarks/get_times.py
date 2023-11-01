@@ -16,9 +16,6 @@ import os
 import re
 import statistics
 
-N_EVENTS = 100016
-
-
 def get_rdf_wall_times(metricsLines: List[str]) -> List[str]:
     wall_times = []
     for ln in metricsLines:
@@ -72,11 +69,6 @@ if __name__ == "__main__":
             with open(path, "r") as f:
                 lines = f.readlines()
                 wall_times = get_rdf_wall_times(lines)
-                # jit_times = get_rdf_jit_times(lines)
 
             with open(path[:-4] + ".data", "w") as f:
-                # f.writelines(
-                #     str(wt) + " " + str(jt) + "\n"
-                #     for wt, jt in zip(wall_times, jit_times)
-                # )
                 f.writelines(str(wt) + "\n" for wt in wall_times)
