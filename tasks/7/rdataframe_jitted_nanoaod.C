@@ -25,7 +25,10 @@ ROOT::RVec<int> find_isolated_jets(Vec<float> eta1, Vec<float> phi1, Vec<float> 
 }
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("Events", "data/nanoaod.ttree.root");
+  auto file = std::unique_ptr<TFile>(TFile::Open("data/nanoaod_1M.ttree.root"));
+  auto tree = std::unique_ptr<TTree>(file->Get<TTree>("Events"));
+  auto treeStats = std::make_unique<TTreePerfStats>("ioperf", tree.get());
+  ROOT::RDataFrame df(*tree);
 
   auto h = df.Filter("nJet > 0", "At least one jet")
              .Define("goodJet_ptcut", "Jet_pt > 30")
@@ -40,10 +43,11 @@ void rdataframe_ttree() {
   TCanvas c;
   h->Draw();
   c.SaveAs("7_rdataframe_jitted_ttree.png");
+  treeStats->Print();
 }
 
 void rdataframe_rntuple() {
-  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod.rntuple.root");
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod_1M.rntuple.root");
 
   auto h = df.Filter("nJet > 0", "At least one jet")
              .Define("goodJet_ptcut", "Jet_pt > 30")

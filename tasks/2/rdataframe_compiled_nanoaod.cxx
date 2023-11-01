@@ -3,20 +3,25 @@
 #include "ROOT/RNTupleDS.hxx"
 
 #include "TCanvas.h"
+#include "TTreePerfStats.h"
 #include "TString.h"
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("Events", "data/nanoaod.ttree.root");
+  auto file = std::unique_ptr<TFile>(TFile::Open("data/nanoaod_1M.ttree.root"));
+  auto tree = std::unique_ptr<TTree>(file->Get<TTree>("Events"));
+  auto treeStats = std::make_unique<TTreePerfStats>("ioperf", tree.get());
+  ROOT::RDataFrame df(*tree);
 
   auto h = df.Histo1D<ROOT::RVec<float>>({"", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "Jet_pt");
 
   TCanvas c;
   h->Draw();
   c.SaveAs("2_rdataframe_compiled_nanoaod_ttree.png");
+  treeStats->Print();
 }
 
 void rdataframe_rntuple() {
-  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod.rntuple.root");
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod_1M.rntuple.root");
 
   auto h = df.Histo1D<ROOT::RVec<float>>({"", ";Jet p_{T} (GeV);N_{Events}", 100, 15, 60}, "Jet_pt");
 

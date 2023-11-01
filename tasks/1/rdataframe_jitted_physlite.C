@@ -1,5 +1,8 @@
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
+  auto file = std::unique_ptr<TFile>(TFile::Open("data/DAOD_PHYSLITE.ttree.root"));
+  auto tree = std::unique_ptr<TTree>(file->Get<TTree>("CollectionTree"));
+  auto treeStats = std::make_unique<TTreePerfStats>("ioperf", tree.get());
+  ROOT::RDataFrame df(*tree);
 
   auto h = df.Define("MET_pt", "MET_Core_AnalysisMETAuxDyn.sumet[MET_Core_AnalysisMETAuxDyn.sumet.size() - 1] / 1000.")
              .Histo1D({"", ";MET (GeV);N_{Events}", 100, 0, 200}, "MET_pt");
@@ -7,6 +10,7 @@ void rdataframe_ttree() {
   TCanvas c;
   h->Draw();
   c.SaveAs("1_rdataframe_jitted_physlite_ttree.png");
+  treeStats->Print();
 }
 
 void rdataframe_rntuple() {

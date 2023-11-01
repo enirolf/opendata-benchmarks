@@ -6,6 +6,7 @@
 #include "ROOT/RLogger.hxx"
 #include "ROOT/RNTupleDS.hxx"
 #include "TCanvas.h"
+#include "TTreePerfStats.h"
 
 template <typename T> using Vec = const ROOT::RVec<T> &;
 using ROOT::Math::PtEtaPhiMVector;
@@ -46,7 +47,10 @@ float trijet_pt(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> mass, 
 }
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
+  auto file = std::unique_ptr<TFile>(TFile::Open("data/DAOD_PHYSLITE.ttree.root"));
+  auto tree = std::unique_ptr<TTree>(file->Get<TTree>("CollectionTree"));
+  auto treeStats = std::make_unique<TTreePerfStats>("ioperf", tree.get());
+  ROOT::RDataFrame df(*tree);
 
   auto df2 = df.Filter([](Vec<float> pts) { return pts.size() >= 3; }, {"AnalysisJetsAuxDyn.pt"}, "At least three jets")
                .Define("JetXYZT",
@@ -64,6 +68,7 @@ void rdataframe_ttree() {
   TCanvas c;
   h1->Draw();
   c.SaveAs("6_rdataframe_compiled_physlite_ttree.png");
+  treeStats->Print();
 }
 
 void rdataframe_rntuple() {

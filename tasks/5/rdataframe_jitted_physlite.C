@@ -18,7 +18,10 @@ auto compute_dimuon_masses(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<fl
 };
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
+  auto file = std::unique_ptr<TFile>(TFile::Open("data/DAOD_PHYSLITE.ttree.root"));
+  auto tree = std::unique_ptr<TTree>(file->Get<TTree>("CollectionTree"));
+  auto treeStats = std::make_unique<TTreePerfStats>("ioperf", tree.get());
+  ROOT::RDataFrame df(*tree);
 
   auto h = df.Filter("AnalysisMuonsAuxDyn.pt.size() >= 2", "At least two muons")
              .Define("Dimuon_mass", compute_dimuon_masses,
@@ -32,6 +35,7 @@ void rdataframe_ttree() {
   TCanvas c;
   h->Draw();
   c.SaveAs("5_rdataframe_jitted_physlite_ttree.png");
+  treeStats->Print();
 }
 
 void rdataframe_rntuple() {

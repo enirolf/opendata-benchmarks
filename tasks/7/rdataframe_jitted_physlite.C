@@ -25,7 +25,10 @@ ROOT::RVec<int> find_isolated_jets(Vec<float> eta1, Vec<float> phi1, Vec<float> 
 }
 
 void rdataframe_ttree() {
-  ROOT::RDataFrame df("CollectionTree", "data/DAOD_PHYSLITE.ttree.root");
+  auto file = std::unique_ptr<TFile>(TFile::Open("data/DAOD_PHYSLITE.ttree.root"));
+  auto tree = std::unique_ptr<TTree>(file->Get<TTree>("CollectionTree"));
+  auto treeStats = std::make_unique<TTreePerfStats>("ioperf", tree.get());
+  ROOT::RDataFrame df(*tree);
 
   auto h = df.Filter("AnalysisJetsAuxDyn.pt.size() > 0", "At least one jet")
              .Define("goodJet_ptcut", "(AnalysisJetsAuxDyn.pt / 1000.) > 30")
@@ -43,6 +46,7 @@ void rdataframe_ttree() {
   TCanvas c;
   h->Draw();
   c.SaveAs("7_rdataframe_jitted_physlite_ttree.png");
+  treeStats->Print();
 }
 
 void rdataframe_rntuple(bool mt = false) {

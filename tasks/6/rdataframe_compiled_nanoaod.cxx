@@ -4,6 +4,7 @@
 #include "ROOT/RNTupleDS.hxx"
 
 #include "TCanvas.h"
+#include "TTreePerfStats.h"
 #include "TString.h"
 
 template <typename T> using Vec = const ROOT::RVec<T> &;
@@ -46,7 +47,10 @@ void rdataframe_ttree() {
   using ROOT::Math::PtEtaPhiMVector;
   using ROOT::VecOps::Construct;
 
-  ROOT::RDataFrame df("Events", "data/nanoaod.ttree.root");
+  auto file = std::unique_ptr<TFile>(TFile::Open("data/nanoaod_1M.ttree.root"));
+  auto tree = std::unique_ptr<TTree>(file->Get<TTree>("Events"));
+  auto treeStats = std::make_unique<TTreePerfStats>("ioperf", tree.get());
+  ROOT::RDataFrame df(*tree);
 
   auto df2 = df.Filter([](unsigned int n) { return n >= 3; }, {"nJet"}, "At least three jets")
                .Define("JetXYZT",
@@ -71,13 +75,14 @@ void rdataframe_ttree() {
   c.cd(2);
   h2->Draw();
   c.SaveAs("6_rdataframe_compiled_nanoaod_ttree.png");
+  treeStats->Print();
 }
 
 void rdataframe_rntuple() {
   using ROOT::Math::PtEtaPhiMVector;
   using ROOT::VecOps::Construct;
 
-  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod.rntuple.root");
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod_1M.rntuple.root");
 
   auto df2 = df.Filter([](unsigned int n) { return n >= 3; }, {"nJet"}, "At least three jets")
                .Define("JetXYZT",
