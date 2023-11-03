@@ -15,7 +15,7 @@ function run_jitted() {
       echo "Running with ${format}..."
       for i in $( seq 1 $N_REPETITIONS ); do
         clear_page_cache
-        results=$(root -q -l -b "tasks/${task}/rdataframe_jitted_${EDM}.C(\"${format}\")" 2>&1)
+        results=$(taskset -c 1 root -q -l -b "tasks/${task}/rdataframe_jitted_${EDM}.C(\"${format}\")" 2>&1)
         echo "$results" >> $RESULTS_DIR/${task}_${format}_jitted.txt
       done
     done
@@ -45,7 +45,7 @@ function run_compiled() {
       echo "   Running with ${format}..."
       for i in $( seq 1 $N_REPETITIONS ); do
         clear_page_cache
-        results=$(./tasks/${task}/compiled_${EDM} ${format} 2>&1)
+        results=$(taskset -c 1 ./tasks/${task}/compiled_${EDM} ${format} 2>&1)
         echo "$results" >> $RESULTS_DIR/${task}_${format}_compiled.txt
       done
     done

@@ -6,5 +6,6 @@ a.out
 *.tar.gz
 data/
 results/
+perf/
 
 compiled_*

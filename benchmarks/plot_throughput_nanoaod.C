@@ -21,7 +21,7 @@ float StdErr(ROOT::VecOps::RVec<float> vals) {
 }
 
 size_t getNEvents() {
-  auto ntuple = RNTupleReader::Open("Events", "data/nanoaod.rntuple.root");
+  auto ntuple = RNTupleReader::Open("Events", "data/nanoaod_1M.rntuple.root");
   return ntuple->GetNEntries();
 }
 
@@ -86,7 +86,7 @@ void plot(int task, std::string_view taskKind) {
   TPad pad("pad", "pad", 0.0, 0.0, 1.0, 1.0);
   pad.SetTopMargin(0.12);
   pad.SetBottomMargin(0.08);
-  pad.SetLeftMargin(0.18);
+  pad.SetLeftMargin(0.12);
   pad.SetRightMargin(0.02);
   pad.SetFillStyle(4000);
   pad.SetFrameFillStyle(4000);
@@ -96,6 +96,7 @@ void plot(int task, std::string_view taskKind) {
 
   float maxThroughput = throughputData["rntuple"].first + throughputData["rntuple"].second;
 
+  TGaxis::SetMaxDigits(4);
   TH1F helper("", "", 2, 0, 2);
   helper.GetXaxis()->SetTickSize(0);
   helper.GetXaxis()->SetNdivisions(4);
@@ -104,9 +105,9 @@ void plot(int task, std::string_view taskKind) {
   helper.GetYaxis()->SetLabelSize(0.045);
   helper.GetYaxis()->SetTitle("Events / s");
   helper.GetYaxis()->SetTitleSize(0.05);
-  helper.GetYaxis()->SetTitleOffset(1.8);
+  helper.GetYaxis()->SetTitleOffset(1.);
   helper.SetMinimum(0);
-  helper.SetMaximum(maxThroughput * 1.2);
+  helper.SetMaximum(12e6);
 
   float labelSize = 0.05;
 
@@ -163,7 +164,7 @@ void plot(int task, std::string_view taskKind) {
   title.SetTextSize(0.05);
   title.SetTextAlign(23);
   title.SetTextFont(42);
-  title.DrawLatexNDC(0.5, 0.975, Form("NanoAOD ADL benchmark, task %d (%s)", task, std::string(taskKind).c_str()));
+  title.DrawLatexNDC(0.5, 0.975, Form("NanoAOD ADL benchmark, task %d", task));
 
   canvas.Print(Form("results/nanoaod/%d_throughput_%s.pdf", task, std::string(taskKind).c_str()));
   TFile f(Form("results/nanoaod/%d_throughput_%s.root", task, std::string(taskKind).c_str()), "RECREATE");
