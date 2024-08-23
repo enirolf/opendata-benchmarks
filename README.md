@@ -1,24 +1,33 @@
 # Sofware benchmarks with open data
 
-**NOTE (1):** This repo contains two versions of the RDataFrame implementation for both NanoAOD and PHYSLITE. One version includes just-in-time compilation and the other is fully compiled and therefore optimized for performance. Also, running the files as C++ macro, via the ROOT interpreter cling, will result in a reduced runtime performance due to missing optimizations. To compile any of the benchmarks named `*_compiled.cxx`, source ROOT and run following line:
+This branch contains two versions of the RDataFrame implementation for NanoAOD. One version includes just-in-time compilation and the other is fully compiled and therefore optimized for performance. Also, running the files as C++ macro, via the ROOT interpreter cling, will result in a reduced runtime performance due to missing optimizations. To compile any of the benchmarks named `*_compiled.cxx`, source ROOT and run `make`.
 
-```
-g++ -O3 -o task task.cxx $(root-config --cflags --libs)
-```
+Each task will produce a histogram with a result of the computation. Reference histograms are included in this repository to verify each benchmark task produces the expected results.
 
-To run the macros (named `*_jitted.C`) efficiently with optimizations, please use the following command:
+To run the macros (named `{TASK}_jitted.C`) efficiently with optimizations, please use the following command:
 
-```
-root -l -b -q macro.C+
+```sh
+root -l -b -q {TASK}_jitted.C+
 ```
 
-**NOTE (2):** `ROOT::EnableImplicitMT()` has been removed for all benchmarks, once this is properly supported by RNTuple+RDataFrame it will be added back.
+All benchmarks can be run in batch mode with the `time_task.sh` script in the `benchmarks/` directory.
+It takes three arguments: whether to run the JITted (use 'jitted') or compiled (use 'compiled') version of the benchmark task, the number of threads to use, and the number of times to repeat each benchmark task. For example, to run the compiled version, using 4 threads with 5 repetitions:
+```sh
+./benchmarks/time_task.sh compiled 4 5
+```
 
-The implementations of the nanoAOD benchmarks tracked by the ROOT team can be found [in root-project/rootbench](https://github.com/root-project/rootbench/blob/master/root/tree/dataframe/RDataFrameOpenDataBenchmarks.cxx).
+The data files when using this script are expected to be in the `data/` directory in the root of this repository, and are expected to be named `nanoaod_53M.ttree.root` and `nanoaod_53.rntuple.root`, for TTree and RNTuple, respectively. See the last paragraph for more information on how to obtain this data.
 
-Just an example what is possible with the existing open data.
+> [!IMPORTANT]
+> For multiple repetitions, it is important to clear the page cache between runs to ensure we are reading the data 'cold'. For this purporse, the `clear_page_cache` utility is provided, which can be built with `make clear_page_cache`. It is required to be present for batch-running the benchmarks.
 
-List of tasks:
+Results are written to `results/`, where for each benchmark task there are two files -- one with the raw output, and one where the runtimes have been extracted. The results can be plotted using ROOT with the following command:
+```sh
+ root -l -q -b benchmarks/plot_throughput_nanoaod.C
+ ```
+ These plots are saved as PDF in `results/` as well.
+
+## Benchmark tasks
 
 1. Plot the Missing ET in an event (loop over events)
 2. Plot the Jet pT of all jets in an event (loop over an array in an event)
@@ -31,13 +40,7 @@ List of tasks:
 
 ## NanoAOD data sets
 
-[Converted to NanoAOD](https://github.com/cms-opendata-analyses/AOD2NanoAODOutreachTool) from [2012 CMS open data](http://opendata.cern.ch/record/6021):
+[Based on the following dataset, converted to NanoAOD](https://github.com/cms-opendata-analyses/AOD2NanoAODOutreachTool) from [2012 CMS open data](http://opendata.cern.ch/record/6021):
   * root://eospublic.cern.ch//eos/root-eos/benchmark/Run2012B_SingleMu.root (16 GiB, 53 million events)
 
-## PHYSLITE data sets
-
-| Data type   | Rucio DID                                                                                                                                     |
-|-------------|:----------------------------------------------------------------------------------------------------------------------------------------------|
-| Run 2 MC    | `mc20_13TeV:mc20_13TeV.364156.Sherpa_221_NNPDF30NNLO_Wmunu_MAXHTPTV0_70_CVetoBVeto.deriv.DAOD_PHYSLITE.e5340_e5984_s3681_r13144_r13146_p5631` |
-| Run 2 Data  | `data18_13TeV:data18_13TeV.00357962.physics_Main.deriv.DAOD_PHYSLITE.r13286_p4910_p5631`                                                      |
-
+A TTree and RNTuple based on this data set, both compressed using Zstd is available upon request. This RNTuple is written according to the data format specification of ROOT v6.32.

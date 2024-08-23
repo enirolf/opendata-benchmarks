@@ -7,6 +7,8 @@
 #include "TTreePerfStats.h"
 #include "TString.h"
 
+#include <unistd.h>
+
 template <typename T> using Vec = const ROOT::RVec<T> &;
 using FourVector = ROOT::Math::PtEtaPhiMVector;
 constexpr static unsigned int PLACEHOLDER_VALUE = 99999;
@@ -52,8 +54,8 @@ unsigned int additional_lepton_idx(Vec<float> pt, Vec<float> eta, Vec<float> phi
   return lep_idx;
 }
 
-void rdataframe_ttree() {
-  auto file = std::unique_ptr<TFile>(TFile::Open("data/nanoaod_1M.ttree.root"));
+void rdataframe_ttree(std::string_view fileName) {
+  auto file = std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str()));
   auto tree = std::unique_ptr<TTree>(file->Get<TTree>("Events"));
   auto treeStats = std::make_unique<TTreePerfStats>("ioperf", tree.get());
   ROOT::RDataFrame df(*tree);
@@ -88,12 +90,12 @@ void rdataframe_ttree() {
 
   TCanvas c;
   h->Draw();
-  c.SaveAs("8_rdataframe_compiled_nanoaod_ttree.png");
+  c.SaveAs("8_rdataframe_compiled_ttree.png");
   treeStats->Print();
 }
 
-void rdataframe_rntuple() {
-  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod_1M.rntuple.root");
+void rdataframe_rntuple(std::string_view fileName) {
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", fileName);
 
   auto concatF = [](Vec<float> a, Vec<float> b) { return Concatenate(a, b); };
   auto concatI = [](Vec<int> a, Vec<int> b) { return Concatenate(a, b); };
@@ -125,24 +127,45 @@ void rdataframe_rntuple() {
 
   TCanvas c;
   h->Draw();
-  c.SaveAs("8_rdataframe_compiled_nanoaod_rntuple.png");
+  c.SaveAs("8_rdataframe_compiled_rntuple.png");
+}
+[[noreturn]] static void usage(char *argv0) {
+  printf("Usage: %s [-h] [-j nthreads] (ttree|rntuple) filename\n\n", argv0);
+  printf("Options:\n");
+  printf("  -h\t\t\tPrint this text\n");
+  printf("  -j nthreads\t\tNumber of threads to use (default: 1)\n");
+  exit(0);
 }
 
-int main(int argc, char const *argv[]) {
-  if (argc < 2) {
-    std::cerr << "Please provide the data format ('ttree' or 'rntuple')" << std::endl;
+int main(int argc, char *argv[]) {
+  int nThreads = 1;
+  int c;
+  while ((c = getopt(argc, argv, "hj:")) != -1) {
+    switch (c) {
+    case 'j':
+      nThreads = std::atoi(optarg);
+      break;
+    case 'h':
+    default:
+      usage(argv[0]);
+    }
+  }
+
+  if ((argc - optind) != 2){
+    usage(argv[0]);
     return 1;
   }
+
+  std::string format = argv[optind];
+  std::string fileName = argv[optind + 1];
 
   auto verbosity =
       ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
 
-  std::string dataFormat = std::string(argv[1]);
-
-  if (dataFormat == "ttree") {
-    rdataframe_ttree();
-  } else if (dataFormat == "rntuple") {
-    rdataframe_rntuple();
+  if (format == "ttree") {
+    rdataframe_ttree(fileName);
+  } else if (format == "rntuple") {
+    rdataframe_rntuple(fileName);
   } else {
     std::cerr << "Invalid data format specified (use 'ttree' or 'rntuple')" << std::endl;
   }

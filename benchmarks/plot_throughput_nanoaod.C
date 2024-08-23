@@ -21,7 +21,7 @@ float StdErr(ROOT::VecOps::RVec<float> vals) {
 }
 
 size_t getNEvents() {
-  auto ntuple = RNTupleReader::Open("Events", "data/nanoaod_1M.rntuple.root");
+  auto ntuple = RNTupleReader::Open("Events", "data/nanoaod_53M.rntuple.root");
   return ntuple->GetNEntries();
 }
 
@@ -39,7 +39,7 @@ void plot(int task, std::string_view taskKind) {
 
 
   for (const auto &format : {"ttree", "rntuple"}) {
-    std::string resultsFilePath = "results/nanoaod/" + std::to_string(task) + "_" + format + "_" + std::string(taskKind) + ".data";
+    std::string resultsFilePath = "results/" + std::to_string(task) + "_" + format + "_" + std::string(taskKind) + ".data";
 
     std::cout << "** Reading from " << resultsFilePath << std::endl;
 
@@ -107,7 +107,7 @@ void plot(int task, std::string_view taskKind) {
   helper.GetYaxis()->SetTitleSize(0.05);
   helper.GetYaxis()->SetTitleOffset(1.);
   helper.SetMinimum(0);
-  helper.SetMaximum(12e6);
+  helper.SetMaximum(45e6);
 
   float labelSize = 0.05;
 
@@ -166,8 +166,8 @@ void plot(int task, std::string_view taskKind) {
   title.SetTextFont(42);
   title.DrawLatexNDC(0.5, 0.975, Form("NanoAOD ADL benchmark, task %d", task));
 
-  canvas.Print(Form("results/nanoaod/%d_throughput_%s.pdf", task, std::string(taskKind).c_str()));
-  TFile f(Form("results/nanoaod/%d_throughput_%s.root", task, std::string(taskKind).c_str()), "RECREATE");
+  canvas.Print(Form("results/%d_throughput_%s.pdf", task, std::string(taskKind).c_str()));
+  TFile f(Form("results/%d_throughput_%s.root", task, std::string(taskKind).c_str()), "RECREATE");
   canvas.Write();
 }
 

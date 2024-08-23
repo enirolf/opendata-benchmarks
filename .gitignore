@@ -1,6 +1,5 @@
 *.swp
 *.swo
-*.png
 a.out
 *.root
 *.tar.gz
@@ -8,4 +7,8 @@ data/
 results/
 perf/
 
+*.png
+!*_reference.png
+
 compiled_*
+clear_page_cache

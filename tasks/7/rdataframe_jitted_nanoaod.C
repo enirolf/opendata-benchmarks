@@ -24,8 +24,8 @@ ROOT::RVec<int> find_isolated_jets(Vec<float> eta1, Vec<float> phi1, Vec<float> 
   return mask;
 }
 
-void rdataframe_ttree() {
-  auto file = std::unique_ptr<TFile>(TFile::Open("data/nanoaod_1M.ttree.root"));
+void rdataframe_ttree(std::string_view fileName) {
+  auto file = std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str()));
   auto tree = std::unique_ptr<TTree>(file->Get<TTree>("Events"));
   auto treeStats = std::make_unique<TTreePerfStats>("ioperf", tree.get());
   ROOT::RDataFrame df(*tree);
@@ -46,8 +46,8 @@ void rdataframe_ttree() {
   treeStats->Print();
 }
 
-void rdataframe_rntuple() {
-  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod_1M.rntuple.root");
+void rdataframe_rntuple(std::string_view fileName) {
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", fileName);
 
   auto h = df.Filter("nJet > 0", "At least one jet")
              .Define("goodJet_ptcut", "Jet_pt > 30")
@@ -64,13 +64,13 @@ void rdataframe_rntuple() {
   c.SaveAs("7_rdataframe_jitted_rntuple.png");
 }
 
-void rdataframe_jitted_nanoaod(std::string_view dataFormat) {
+void rdataframe_jitted_nanoaod(std::string_view dataFormat, std::string_view fileName, int nThreads = 1) {
+  ROOT::EnableImplicitMT(nThreads);
   auto verbosity =
       ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
 
   if (dataFormat == "ttree")
-    rdataframe_ttree();
+    rdataframe_ttree(fileName);
   else if (dataFormat == "rntuple")
-    rdataframe_rntuple();
+    rdataframe_rntuple(fileName);
 }
-

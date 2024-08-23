@@ -34,11 +34,11 @@ float trijet_pt(Vec<float> pt, Vec<float> eta, Vec<float> phi, Vec<float> mass, 
   return (p1 + p2 + p3).pt();
 }
 
-void rdataframe_ttree() {
+void rdataframe_ttree(std::string_view fileName) {
   using ROOT::Math::PtEtaPhiMVector;
   using ROOT::VecOps::Construct;
 
-  auto file = std::unique_ptr<TFile>(TFile::Open("data/nanoaod_1M.ttree.root"));
+  auto file = std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str()));
   auto tree = std::unique_ptr<TTree>(file->Get<TTree>("Events"));
   auto treeStats = std::make_unique<TTreePerfStats>("ioperf", tree.get());
   ROOT::RDataFrame df(*tree);
@@ -62,15 +62,15 @@ void rdataframe_ttree() {
   h1->Draw();
   c.cd(2);
   h2->Draw();
-  c.SaveAs("6_rdataframe_jitted_nanoaod_ttree.png");
+  c.SaveAs("6_rdataframe_jitted_ttree.png");
   treeStats->Print();
 }
 
-void rdataframe_rntuple() {
+void rdataframe_rntuple(std::string_view fileName) {
   using ROOT::Math::PtEtaPhiMVector;
   using ROOT::VecOps::Construct;
 
-  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", "data/nanoaod_1M.rntuple.root");
+  ROOT::RDataFrame df = ROOT::RDF::Experimental::FromRNTuple("Events", fileName);
 
   auto df2 = df.Filter("nJet >= 3", "At least three jets")
                .Define("JetXYZT",
@@ -91,16 +91,17 @@ void rdataframe_rntuple() {
   h1->Draw();
   c.cd(2);
   h2->Draw();
-  c.SaveAs("6_rdataframe_jitted_nanoaod_rntuple.png");
+  c.SaveAs("6_rdataframe_jitted_rntuple.png");
 }
 
 
-void rdataframe_jitted_nanoaod(std::string_view dataFormat) {
+void rdataframe_jitted_nanoaod(std::string_view dataFormat, std::string_view fileName, int nThreads = 1) {
+  ROOT::EnableImplicitMT(nThreads);
   auto verbosity =
       ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
 
   if (dataFormat == "ttree")
-    rdataframe_ttree();
+    rdataframe_ttree(fileName);
   else if (dataFormat == "rntuple")
-    rdataframe_rntuple();
+    rdataframe_rntuple(fileName);
 }

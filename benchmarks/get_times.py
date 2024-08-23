@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
     for root, dirs, files in os.walk(args.results_dir):
         for file in files:
-            if not file.endswith(".txt"):
+            if not file.endswith("raw.txt"):
                 continue
 
             path = os.path.join(root, file)
@@ -70,5 +70,5 @@ if __name__ == "__main__":
                 lines = f.readlines()
                 wall_times = get_rdf_wall_times(lines)
 
-            with open(path[:-4] + ".data", "w") as f:
+            with open(path[:-8] + ".data", "w") as f:
                 f.writelines(str(wt) + "\n" for wt in wall_times)

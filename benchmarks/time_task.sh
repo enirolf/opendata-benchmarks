@@ -3,32 +3,37 @@
 RESULTS_DIR=${4:-./results}
 mkdir -p $RESULTS_DIR
 
+DATA_DIR=./data
+
 function run_jitted() {
-  EDM=$1
+  N_THREADS=$1
   N_REPETITIONS=$2
 
-  echo "##### Running in JITted mode..."
+  echo "##### Running with JITting..."
 
   for task in $( seq 1 8 ); do
     echo "*** Running task $task..."
     for format in {ttree,rntuple}; do
       echo "Running with ${format}..."
       for i in $( seq 1 $N_REPETITIONS ); do
-        clear_page_cache
-        results=$(taskset -c 1 root -q -l -b "tasks/${task}/rdataframe_jitted_${EDM}.C(\"${format}\")" 2>&1)
-        echo "$results" >> $RESULTS_DIR/${task}_${format}_jitted.txt
+        if ! $(./clear_page_cache); then
+          echo "Could not clear page cache. Make sure you have the right privileges."
+          return 1
+        fi
+        results=$(root -q -l -b "./tasks/${task}/rdataframe_jitted_nanoaod.C(\"${format}\", \"${DATA_DIR}/nanoaod_53M.${format}.root\", ${N_THREADS})" 2>&1)
+        echo "$results" >> $RESULTS_DIR/${task}_${format}_jitted_raw.txt
       done
     done
   done
 
-  python get_times.py $RESULTS_DIR
+  python benchmarks/get_times.py $RESULTS_DIR
 
   echo "All done!"
   return 0
 }
 
 function run_compiled() {
-  EDM=$1
+  N_THREADS=$1
   N_REPETITIONS=$2
 
   echo "### Running in compiled mode..."
@@ -36,7 +41,7 @@ function run_compiled() {
   for task in $( seq 1 8 ); do
     echo "*** Running task $task..."
 
-    if [[ ! -e "tasks/${task}/compiled_${EDM}" ]]; then
+    if [[ ! -e "./tasks/${task}/compiled_nanoaod" ]]; then
       echo "Benchmark binary not found! Make sure to run 'make'"
       return 1
     fi
@@ -44,9 +49,12 @@ function run_compiled() {
     for format in {ttree,rntuple}; do
       echo "   Running with ${format}..."
       for i in $( seq 1 $N_REPETITIONS ); do
-        clear_page_cache
-        results=$(taskset -c 1 ./tasks/${task}/compiled_${EDM} ${format} 2>&1)
-        echo "$results" >> $RESULTS_DIR/${task}_${format}_compiled.txt
+        if ! $(./clear_page_cache); then
+          echo "Could not clear page cache. Perhaps run with sudo?"
+          return 1
+        fi
+        results=$(./tasks/${task}/compiled_nanoaod -j ${N_THREADS} ${format} ${DATA_DIR}/nanoaod_53M.${format}.root 2>&1)
+        echo "$results" >> $RESULTS_DIR/${task}_${format}_compiled_raw.txt
       done
     done
   done
@@ -58,34 +66,23 @@ function run_compiled() {
 }
 
 function print_usage() {
-  echo "Usage: $0 {nanoaod|physlite} {jitted|compiled} N_REPETITIONS [RESULTS_DIR]"
+  echo "Usage: $0 (jitted|compiled) N_THREADS N_REPETITIONS [RESULTS_DIR]"
 }
 
-if [[ -z "$2" ]]; then
+if [[ "$#" -ne 3 ]]; then
   print_usage
   exit 1
 fi
 
 case $1 in
-  nanoaod|physlite)
-    ;;
-  *)
-    print_usage
-    exit 1
-    ;;
-esac
-
-
-case $2 in
   jitted)
-    run_jitted $1 $3
+    run_jitted $2 $3
     ;;
   compiled)
-    run_compiled $1 $3
+    run_compiled $2 $3
     ;;
   *)
     print_usage
     exit 1
     ;;
 esac
-

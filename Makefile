@@ -8,11 +8,15 @@ TASKSDIR:=$(PWD)/tasks
 
 .PHONY: clean all
 
-all: nanoaod physlite
+all: clear_page_cache nanoaod
 
 clean:
 	find $(TASKSDIR) -name compiled_nanoaod -delete
-	find $(TASKSDIR) -name compiled_physlite -delete
+
+clear_page_cache: clear_page_cache.cxx
+	$(CXX) -Wall -g -o $@ $^
+	sudo chown root $@
+	sudo chmod 4755 $@
 
 # NanoAOD ######################################################################
 
@@ -42,32 +46,3 @@ task7_nanoaod:
 
 task8_nanoaod:
 	@cd tasks/8 && $(MAKE) compiled_nanoaod
-
-# PHYSLITE #####################################################################
-
-physlite: task1_physlite task2_physlite task3_physlite task4_physlite \
-				  task5_physlite task6_physlite task7_physlite task8_physlite \
-
-task1_physlite:
-	@cd tasks/1 && $(MAKE) compiled_physlite
-
-task2_physlite:
-	@cd tasks/2 && $(MAKE) compiled_physlite
-
-task3_physlite:
-	@cd tasks/3 && $(MAKE) compiled_physlite
-
-task4_physlite:
-	@cd tasks/4 && $(MAKE) compiled_physlite
-
-task5_physlite:
-	@cd tasks/5 && $(MAKE) compiled_physlite
-
-task6_physlite:
-	@cd tasks/6 && $(MAKE) compiled_physlite
-
-task7_physlite:
-	@cd tasks/7 && $(MAKE) compiled_physlite
-
-task8_physlite:
-	@cd tasks/8 && $(MAKE) compiled_physlite
